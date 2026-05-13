@@ -8,11 +8,26 @@ local addon = _G.Blizz
 MockReset()
 MockSetTime(1000)
 MockSetGroup(5)
-MockSetUnit("player", { class = "WARRIOR", classLocalized = "Warrior", name = "Me", guid = "Player-Me-1" })
-MockSetUnit("party1", { class = "ROGUE", classLocalized = "Rogue", name = "Stabby", guid = "Player-Stabby-1" })
-MockSetUnit("party2", { class = "MAGE", classLocalized = "Mage", name = "Boomer", guid = "Player-Boomer-1" })
-MockSetUnit("party3", { class = "PRIEST", classLocalized = "Priest", name = "Healer", guid = "Player-Healer-1" })
-MockSetUnit("party4", { class = "PALADIN", classLocalized = "Paladin", name = "Pally", guid = "Player-Pally-1" })
+MockSetUnit(
+	"player",
+	{ class = "WARRIOR", classLocalized = "Warrior", name = "Me", guid = "Player-Me-1" }
+)
+MockSetUnit(
+	"party1",
+	{ class = "ROGUE", classLocalized = "Rogue", name = "Stabby", guid = "Player-Stabby-1" }
+)
+MockSetUnit(
+	"party2",
+	{ class = "MAGE", classLocalized = "Mage", name = "Boomer", guid = "Player-Boomer-1" }
+)
+MockSetUnit(
+	"party3",
+	{ class = "PRIEST", classLocalized = "Priest", name = "Healer", guid = "Player-Healer-1" }
+)
+MockSetUnit(
+	"party4",
+	{ class = "PALADIN", classLocalized = "Paladin", name = "Pally", guid = "Player-Pally-1" }
+)
 
 assert(addon.modules.kickrota == KickRota, "kickrota module registered")
 print("✓ module registered with id 'kickrota'")
