@@ -49,3 +49,45 @@ print("✓ unknown spell ignored")
 addon.EventBus:dispatch("UNIT_SPELLCAST_START", "player", "cast-self", 88888)
 assert(not TankBuster.alert:IsShown(), "player's own cast ignored")
 print("✓ player cast ignored")
+
+-- I-01: production DB must have meaningful coverage (not the empty starter anymore)
+local count = 0
+local high_count = 0
+local medium_count = 0
+local valid_suggests = {
+	shield_wall = true,
+	last_stand = true,
+	ignore_pain = true,
+	demo_shout = true,
+}
+for spellID, entry in pairs(addon.TankBustersS1) do
+	-- Skip the two test entries we injected at the top
+	if spellID ~= 88888 and spellID ~= 88889 then
+		count = count + 1
+		assert(type(entry.name) == "string" and #entry.name > 0, "entry " .. spellID .. " has name")
+		assert(
+			entry.severity == "high" or entry.severity == "medium",
+			"entry " .. spellID .. " severity"
+		)
+		assert(
+			valid_suggests[entry.suggest],
+			"entry " .. spellID .. " suggest is valid: " .. tostring(entry.suggest)
+		)
+		if entry.severity == "high" then
+			high_count = high_count + 1
+		elseif entry.severity == "medium" then
+			medium_count = medium_count + 1
+		end
+	end
+end
+assert(count >= 15, "tankbuster DB has at least 15 curated entries, got " .. count)
+assert(high_count >= 5, "at least 5 high-severity entries, got " .. high_count)
+assert(medium_count >= 5, "at least 5 medium-severity entries, got " .. medium_count)
+print(
+	string.format(
+		"✓ tankbuster DB has %d curated entries (%d high / %d medium)",
+		count,
+		high_count,
+		medium_count
+	)
+)
