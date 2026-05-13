@@ -37,7 +37,9 @@ MDT.L = MDT.L
 -- Iterate Midnight dungeon files
 local function list_files(dir)
 	local out = {}
-	local p = io.popen("ls " .. dir .. "/*.lua 2>/dev/null")
+	-- Quote the directory to survive spaces in path
+	local cmd = string.format("ls %q/*.lua 2>/dev/null", dir)
+	local p = io.popen(cmd)
 	if p then
 		for line in p:lines() do
 			table.insert(out, line)
