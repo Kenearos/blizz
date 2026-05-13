@@ -1,0 +1,8 @@
+## Interface: 120005
+## Title: Blizz
+## Version: 0.0.1
+## Author: kenearos
+## Notes: WoW UI experiment
+## SavedVariables: BlizzDB
+
+# Lua files (add as we build)

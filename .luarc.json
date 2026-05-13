@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+  "runtime.version": "Lua 5.1",
+  "runtime.special": {
+    "C_Timer.After": "setTimeout"
+  },
+  "workspace.library": [
+    "/home/deck/.local/share/wow-api/Annotations"
+  ],
+  "workspace.checkThirdParty": false,
+  "diagnostics.globals": [
+    "LibStub",
+    "SLASH_BLIZZ1"
+  ],
+  "completion.callSnippet": "Replace",
+  "hint.enable": true
+}

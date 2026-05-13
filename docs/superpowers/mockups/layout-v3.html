@@ -1,0 +1,139 @@
+<style>
+.screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: linear-gradient(180deg, #0d1117 0%, #1a1d24 60%, #0d1117 100%);
+  border: 1px solid #333;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 10px;
+  color: #cdd9e5;
+}
+.screen .crosshair {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px; height: 8px;
+  border: 1px solid #aaa; border-radius: 50%;
+}
+.screen .player-label {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, 8px);
+  font-size: 8px; color: #888;
+}
+.zone-label {
+  position: absolute;
+  font-size: 9px;
+  color: #6e7681;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.zone-line {
+  position: absolute;
+  border: 1px dashed #444;
+  pointer-events: none;
+}
+.block {
+  position: absolute;
+  border: 1px solid;
+  border-radius: 2px;
+  padding: 2px 4px;
+  white-space: nowrap;
+  font-size: 9px;
+  line-height: 1.3;
+}
+.bk-am  { border-color: #4ec9b0; color: #4ec9b0; background: rgba(78,201,176,.1); }
+.bk-dc  { border-color: #d7a96b; color: #d7a96b; background: rgba(215,169,107,.1); }
+.bk-ra  { border-color: #ff5555; color: #ff5555; background: rgba(255,85,85,.18); font-weight: bold; }
+.bk-mp  { border-color: #79c0ff; color: #79c0ff; background: rgba(121,192,255,.1); }
+.bk-ax  { border-color: #c397ff; color: #c397ff; background: rgba(195,151,255,.1); }
+.bk-dt  { border-color: #8b949e; color: #8b949e; background: rgba(139,148,158,.12); }
+.bk-pc  { border-color: #56d364; color: #56d364; background: rgba(86,211,100,.1); }
+.bk-kr  { border-color: #f78166; color: #f78166; background: rgba(247,129,102,.15); }
+.bk-np  { border-color: #444; color: #777; background: rgba(255,255,255,.02); }
+.bk-st  { border-color: #79c0ff; color: #79c0ff; background: rgba(121,192,255,.05); }
+.shift-arrow {
+  position: absolute;
+  font-size: 14px;
+  color: #ff5555;
+  font-weight: bold;
+}
+</style>
+
+<h2>v3 — Reflect & Active Mit rechts versetzt, Defensive-CD-Bar wieder breit zentral</h2>
+<p class="subtitle">Crosshair zentriert. Reflect-Alert + Active-Mit-Anzeige bei ~62 % (leicht rechts vom Spieler). Defensive-CDs wieder als breite horizontale Bar wie in v1 — direkt unter Spieler.</p>
+
+<div class="screen">
+
+  <!-- TOP STRIP -->
+  <div class="block bk-st" style="left:30%; top:2%;">⚔ Threat</div>
+  <div class="block bk-st" style="left:40%; top:2%;">⏱ Lust</div>
+  <div class="block bk-st" style="left:48%; top:2%;">⚡ Combat</div>
+  <div class="block bk-st" style="left:58%; top:2%;">📡 Range 5/5</div>
+  <div class="block bk-st" style="left:68%; top:2%;">💀 BR ✓</div>
+
+  <!-- TOP-LEFT: M+ Run Frame -->
+  <div class="block bk-mp" style="left:2%; top:2%; width:18%;">M+ Timer 18:42 · ↓ +2</div>
+  <div class="block bk-mp" style="left:2%; top:10%; width:18%;">Forces 64% (96/151)</div>
+  <div class="block bk-ax" style="left:2%; top:18%; width:18%;">Affix: Voidbound (Tyr+Fort)</div>
+
+  <!-- TOP-RIGHT: Death/Group -->
+  <div class="block bk-dt" style="right:2%; top:2%;">☠ 0  (–0 s)</div>
+  <div class="block bk-dt" style="right:2%; top:10%;">Pulls 4/12</div>
+
+  <!-- NAMEPLATE-ZONE -->
+  <div class="zone-line" style="left:25%; top:30%; right:25%; height:14%;"></div>
+  <div class="zone-label" style="left:25%; top:30%; transform:translateY(-12px);">Nameplate-Zone (klassifiziert)</div>
+  <div class="block bk-np" style="left:30%; top:33%; width:14%;">▶ Caster (pink)</div>
+  <div class="block bk-np" style="right:30%; top:33%; width:14%;">▶ Frontal (blau)</div>
+
+  <!-- PLAYER -->
+  <div class="crosshair"></div>
+  <div class="player-label">PLAYER</div>
+
+  <!-- VERSCHIEBUNGS-PFEIL für die rechts-versetzten Elemente -->
+  <div class="shift-arrow" style="left:51%; top:54%;">→</div>
+
+  <!-- REAKTIONS-CLUSTER (rechts versetzt) -->
+  <div class="block bk-ra" style="left:62%; top:55%; transform:translateX(-50%); padding:4px 8px;">⚠ REFLECTABLE CAST INCOMING</div>
+  <div class="block bk-am" style="left:62%; top:65%; transform:translateX(-50%);">⬢ Shield Block 4.8s · 🛡 IP 38k absorb</div>
+
+  <!-- DEFENSIVE-CD-BAR (wieder breit horizontal, zentriert wie v1) -->
+  <div class="block bk-dc" style="left:50%; top:76%; transform:translateX(-50%); width:48%;">Defensive-CD-Bar: Wall · LastStand · SpRfl · Demo · Rally · Avatar · Banner · Charge</div>
+
+  <!-- RECHTS-MITTE: Party-CDs -->
+  <div class="block bk-pc" style="right:2%; top:40%; width:14%;">🟢 Healer Defs</div>
+  <div class="block bk-pc" style="right:2%; top:47%; width:14%;">🟢 DPS Defs</div>
+  <div class="block bk-pc" style="right:2%; top:54%; width:14%;">🟢 Externals</div>
+
+  <!-- UNTEN-LINKS: Kick-Rota -->
+  <div class="block bk-kr" style="left:2%; bottom:14%; width:18%;">⚠ KICK ROTATION</div>
+  <div class="block bk-kr" style="left:2%; bottom:7%; width:18%;">Next: Player2 (ready)</div>
+  <div class="block bk-kr" style="left:2%; bottom:2%; width:18%;">You: Pummel 8s</div>
+
+  <!-- UNTEN-RECHTS -->
+  <div class="block bk-dt" style="right:2%; bottom:2%; width:18%;">Combat Errors</div>
+
+</div>
+
+<div style="margin-top:14px; padding:10px; background:#161b22; border-left:3px solid #d7a96b; font-size:12px">
+<strong>v3 — geändert gegenüber v2:</strong>
+<ul style="margin:6px 0 0; padding-left:20px; line-height:1.6">
+<li>Defensive-CD-Bar ist wieder die <strong>breite horizontale Bar</strong> (wie v1), zentriert unter dem Spieler.</li>
+<li>Reflect-Alert und Active-Mit-Anzeige bleiben bei <strong>~62 %</strong> (rechts vom Spieler).</li>
+<li>Crosshair und Sichtlinie nach vorne bleiben frei.</li>
+</ul>
+</div>
+
+<h3 style="margin-top:18px">Passt v3?</h3>
+<div class="options">
+  <div class="option" data-choice="passt" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content"><h3>Passt — weiter</h3><p>Layout ist gesetzt. Weiter zum Visual-Stil / Theme (Farben, Schrift, Optik).</p></div>
+  </div>
+  <div class="option" data-choice="weiter-justieren" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content"><h3>Noch justieren</h3><p>Schreib mir was — Element X verschieben, größer, kleiner, weg, neu hinzu.</p></div>
+  </div>
+</div>

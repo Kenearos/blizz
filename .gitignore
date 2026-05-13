@@ -1,0 +1,14 @@
+.DS_Store
+*.log
+*.swp
+*~
+
+# lua-language-server cache
+.luarc.local.json
+log/
+
+# superpowers brainstorming session files
+.superpowers/
+
+# Claude local settings (per-user)
+.claude/settings.local.json
