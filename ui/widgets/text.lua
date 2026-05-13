@@ -7,6 +7,7 @@ end
 -- ui/widgets/text.lua
 -- Themed FontString mit Style-Profilen.
 -- Styles: default | value | label | alert | title.
+-- Defensiv gegen SetFont-Failures in Midnight 12.0 (custom font paths können throwen).
 
 local Theme = addon.Theme or require("ui.theme")
 
@@ -23,12 +24,26 @@ local Text = {}
 function Text:new(spec)
 	assert(spec and spec.parent, "Text:new requires {parent=...}")
 	local layer = spec.layer or "OVERLAY"
-	local fs = spec.parent:CreateFontString(spec.name, layer)
+	-- Inherit from GameFontNormal — gibt uns einen Default-Font falls SetFont später failt.
+	local fs = spec.parent:CreateFontString(spec.name, layer, "GameFontNormal")
 	local style = STYLE[spec.style or "default"] or STYLE.default
 	local size = Theme.fonts[style.size_key] or Theme.fonts.default_size
-	fs:SetFont(Theme.fonts.family, size, "OUTLINE")
-	fs:SetTextColor(Theme.getColor(style.color))
-	if spec.text then
+
+	-- SetFont in pcall — in 12.0 kann ein nicht-ladbarer Font-Pfad einen Error werfen.
+	-- Fallback auf den vererbten GameFontNormal Font wenn unser Custom-Font failt.
+	local font_ok = false
+	if fs.SetFont then
+		font_ok = pcall(fs.SetFont, fs, Theme.fonts.family, size, "OUTLINE")
+	end
+	if not font_ok and fs.SetFont then
+		-- Versuche Fallback-Font
+		pcall(fs.SetFont, fs, Theme.fonts.fallback, size, "OUTLINE")
+	end
+
+	if fs.SetTextColor then
+		pcall(fs.SetTextColor, fs, Theme.getColor(style.color))
+	end
+	if spec.text and fs.SetText then
 		fs:SetText(spec.text)
 	end
 	return fs
