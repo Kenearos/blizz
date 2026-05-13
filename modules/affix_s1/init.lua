@@ -34,6 +34,13 @@ function AffixS1:init()
 	})
 	self.alert:SetPoint("TOP", UIParent, "TOP", 0, -60)
 	self.active_units = {} -- nameplate-unit → npcID
+	self.capture_mode = nil -- nil oder "voidbound"/"pulsar"/"devour"/"ascendant"
+end
+
+-- Runtime-Capture: schaltet sich via /blizz capture <bargain> ein und
+-- printed unbekannte npcIDs in den Chat, so dass man sie ins data-File übertragen kann.
+function AffixS1:setCaptureMode(bargain)
+	self.capture_mode = bargain
 end
 
 function AffixS1:onEvent(event, unit)
@@ -42,6 +49,20 @@ function AffixS1:onEvent(event, unit)
 		local npcID = parse_npcID(guid)
 		if not npcID then
 			return
+		end
+		if self.capture_mode and DEFAULT_CHAT_FRAME then
+			local lookup = addon.AffixesS1 and addon.AffixesS1.npcLookup
+			if not (lookup and lookup[npcID]) then
+				local name = (UnitName and UnitName(unit)) or "?"
+				DEFAULT_CHAT_FRAME:AddMessage(
+					string.format(
+						"|cffff5dc8[Blizz Capture %s]|r new npcID: %d  name: %q",
+						self.capture_mode,
+						npcID,
+						name
+					)
+				)
+			end
 		end
 		local lookup = addon.AffixesS1 and addon.AffixesS1.npcLookup
 		local entry = lookup and lookup[npcID]

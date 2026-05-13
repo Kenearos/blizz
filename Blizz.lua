@@ -107,9 +107,35 @@ function addon:registerSlash()
 			for id, _ in pairs(addon.modules) do
 				print("  " .. id)
 			end
+		elseif msg:match("^capture ") then
+			local target = msg:match("^capture%s+(%S+)")
+			local affix_mod = addon.modules.affix_s1
+			if not affix_mod or not affix_mod.setCaptureMode then
+				print("|cff7ed9ff[Blizz]|r affix_s1 module not loaded")
+			elseif target == "off" or target == "stop" then
+				affix_mod:setCaptureMode(nil)
+				print("|cff7ed9ff[Blizz]|r capture mode OFF")
+			elseif
+				target == "voidbound"
+				or target == "pulsar"
+				or target == "devour"
+				or target == "ascendant"
+			then
+				affix_mod:setCaptureMode(target)
+				print(
+					"|cff7ed9ff[Blizz]|r capture mode "
+						.. target
+						.. " — neue Mobs in Sichtweite werden gemeldet"
+				)
+				print("|cff7ed9ff[Blizz]|r /blizz capture off zum stoppen")
+			else
+				print(
+					"|cff7ed9ff[Blizz]|r usage: /blizz capture voidbound|pulsar|devour|ascendant|off"
+				)
+			end
 		else
 			print(
-				"|cff7ed9ff[Blizz]|r commands: status, errors, modules, disable <id>, enable <id>"
+				"|cff7ed9ff[Blizz]|r commands: status, errors, modules, disable <id>, enable <id>, capture <bargain>"
 			)
 		end
 	end

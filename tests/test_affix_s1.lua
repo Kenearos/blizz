@@ -37,3 +37,17 @@ print("✓ non-affix mob ignored (no error)")
 addon.EventBus:dispatch("NAME_PLATE_UNIT_REMOVED", "nameplate1")
 assert(not AffixS1.alert:IsShown(), "alert hidden when affix mob despawns")
 print("✓ affix mob removed → alert hidden")
+
+-- Capture-mode tests
+AffixS1:setCaptureMode("voidbound")
+assert(AffixS1.capture_mode == "voidbound", "capture mode set to voidbound")
+
+-- Unknown NPC spawns while capturing → no crash, capture_mode persists
+MockSetUnit("nameplate999", { guid = "Creature-0-1234-2660-1-99999-000099999999" })
+addon.EventBus:dispatch("NAME_PLATE_UNIT_ADDED", "nameplate999")
+assert(AffixS1.capture_mode == "voidbound", "capture mode persists after unknown NPC")
+print("✓ capture mode + unknown NPC handled gracefully")
+
+AffixS1:setCaptureMode(nil)
+assert(AffixS1.capture_mode == nil, "capture mode off")
+print("✓ capture mode off")
