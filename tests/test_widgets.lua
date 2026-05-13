@@ -69,10 +69,10 @@ local alert = Alert:new({ parent = UIParent, text = "REFLECT INCOMING", width = 
 assert(alert:getState() == "alert", "Alert default state is alert")
 assert(alert:isPulsing() == false, "Alert not pulsing initially (created hidden)")
 alert:show()
-assert(alert:isShown(), "Alert shown")
+assert(alert:IsShown(), "Alert shown")
 assert(alert:isPulsing(), "Alert pulses when shown")
 alert:hide()
-assert(not alert:isShown(), "Alert hidden")
+assert(not alert:IsShown(), "Alert hidden")
 assert(not alert:isPulsing(), "Alert stops pulsing when hidden")
 print("✓ Alert show/hide + pulse lifecycle")
 
