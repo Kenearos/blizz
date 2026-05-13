@@ -14,6 +14,7 @@ local Frame = addon.Frame or require("ui.widgets.frame")
 local Text = addon.Text or require("ui.widgets.text")
 
 local MAX_ROWS = 6 -- show top 6 most recently used CDs
+local MAX_TRACKED = 60 -- hard cap to prevent unbounded growth over long sessions
 
 local PartyCDs = {
 	id = "party_cds",
@@ -44,6 +45,27 @@ function PartyCDs:init()
 	-- Unit-Events sind in Midnight 12.0 nicht restricted.
 end
 
+-- Drops entries whose ready_at is in the past. Called from on_cast_success() and refresh().
+-- Also enforces MAX_TRACKED cap so the list can't grow unbounded if many casts overlap.
+function PartyCDs:prune()
+	local now = (GetTime and GetTime()) or 0
+	local kept = {}
+	for _, t in ipairs(self.tracked) do
+		if t.ready_at > now then
+			table.insert(kept, t)
+		end
+	end
+	-- Hard cap: keep the most-recently-inserted entries if we somehow accumulated too many
+	if #kept > MAX_TRACKED then
+		local trimmed = {}
+		for i = #kept - MAX_TRACKED + 1, #kept do
+			table.insert(trimmed, kept[i])
+		end
+		kept = trimmed
+	end
+	self.tracked = kept
+end
+
 function PartyCDs:on_cast_success(unit, spellID)
 	if not spellID then
 		return
@@ -53,6 +75,8 @@ function PartyCDs:on_cast_success(unit, spellID)
 		return
 	end
 	local now = (GetTime and GetTime()) or 0
+	-- Prune expired entries before adding new ones — keeps the list bounded.
+	self:prune()
 	table.insert(self.tracked, {
 		source_guid = UnitGUID and UnitGUID(unit),
 		source_name = (UnitName and UnitName(unit)) or unit or "?",
@@ -85,6 +109,8 @@ function PartyCDs:listOnCooldown()
 end
 
 function PartyCDs:refresh()
+	-- Opportunistic prune: cheap to do on every refresh, keeps tracked tight.
+	self:prune()
 	local active = self:listOnCooldown()
 	for i = 1, MAX_ROWS do
 		local row = self.rows[i]

@@ -61,3 +61,26 @@ addon.EventBus:dispatch("UNIT_SPELLCAST_SUCCEEDED", "party3", "cast-y", 999998)
 cds = PartyCDs:listOnCooldown()
 assert(#cds == count, "non-tracked spells ignored, count unchanged")
 print("✓ non-tracked spells ignored")
+
+-- I-07: Memory-Leak Fix — tracked must not grow unbounded across many casts.
+-- Simulate 100 sequential PS casts, advance time so all expire, then verify cleanup.
+MockSetTime(2000)
+PartyCDs.tracked = {} -- reset for a clean baseline
+for i = 1, 100 do
+	addon.EventBus:dispatch("UNIT_SPELLCAST_SUCCEEDED", "party1", "cast-bulk-" .. i, 33206)
+end
+-- Right after burst: tracked has up-to-MAX_TRACKED entries (active CDs)
+assert(
+	#PartyCDs.tracked <= 60,
+	"tracked is hard-capped to MAX_TRACKED after burst, got " .. #PartyCDs.tracked
+)
+print("✓ tracked is hard-capped under burst load (got " .. #PartyCDs.tracked .. ")")
+
+-- Advance time past all CDs and trigger a refresh — expired entries must be pruned.
+MockSetTime(2000 + 200) -- 200s past last cast, well beyond 180s PS CD
+PartyCDs:refresh()
+assert(
+	#PartyCDs.tracked == 0,
+	"tracked is fully pruned when all CDs expired, got " .. #PartyCDs.tracked
+)
+print("✓ expired CDs pruned from tracked on refresh")
