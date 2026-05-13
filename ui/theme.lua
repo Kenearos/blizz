@@ -24,6 +24,14 @@ Theme.colors = {
 	healer = { 0.773, 1.000, 0.180, 1.00 }, -- #c5ff2e
 	cd_border = { 0.165, 0.227, 0.290, 1.00 }, -- #2a3a4a
 	cd_text = { 0.353, 0.439, 0.502, 1.00 }, -- #5a7080
+	-- v7 Tier-1 visual-pattern tokens
+	hatch = { 0.494, 0.851, 1.000, 0.35 },
+	id_label = { 0.494, 0.851, 1.000, 0.60 },
+	pip_ready = { 0.494, 0.851, 1.000, 1.00 },
+	pip_cast = { 0.302, 0.878, 0.784, 1.00 },
+	pip_alert = { 1.000, 0.161, 0.400, 1.00 },
+	pip_idle = { 0.353, 0.439, 0.502, 0.40 },
+	box_header = { 0.494, 0.851, 1.000, 0.70 },
 }
 
 Theme.fonts = {
@@ -40,6 +48,11 @@ Theme.layout = {
 	letter_spacing_title = 3, -- WoW kennt kein letter-spacing — wird via Spacing-Hack umgesetzt
 	radius = 0,
 	container_radius = 4,
+	-- v7 Tier-1 layout knobs
+	hatch_strip_w = 6,
+	id_label_offset_y = -2,
+	pip_size = 4,
+	box_header_size = 10,
 }
 
 -- Convenience: getColor("primary") → 4 separate Werte (für SetColorRGBA-Style)

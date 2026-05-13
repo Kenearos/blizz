@@ -79,3 +79,31 @@ print("✓ Alert show/hide + pulse lifecycle")
 alert:setText("KICK NOW")
 assert(alert:getText() == "KICK NOW", "text updated")
 print("✓ Alert text updates")
+
+-- v7 Tier-1 patterns
+local f_id =
+	Frame:new({ name = "T_ID", parent = UIParent, width = 100, height = 30, id_code = "MIT-01" })
+assert(f_id.__id_code, "id_code FontString created when id_code prop given")
+assert(f_id.__id_code:GetText() == "[ MIT-01 ]", "id_code text formatted")
+print("✓ v7: Frame id_code")
+
+local f_h = Frame:new({ name = "T_HATCH", parent = UIParent, width = 100, height = 30 })
+assert(f_h.__hatch_strip, "hatch_strip texture exists on all frames")
+print("✓ v7: Frame hatch strip")
+
+local f_p = Frame:new({ name = "T_PIP", parent = UIParent, width = 100, height = 30 })
+assert(f_p.__status_pip, "status_pip texture exists")
+assert(type(f_p.setPipState) == "function", "setPipState method exists")
+f_p:setReady()
+assert(f_p.__pip_state == "ready", "pip state ready after setReady")
+f_p:setAlert()
+assert(f_p.__pip_state == "alert", "pip state alert after setAlert")
+f_p:setCD()
+assert(f_p.__pip_state == "idle", "pip state idle after setCD")
+print("✓ v7: Frame status pip state transitions")
+
+local f_b = Frame:new({ name = "T_BOX", parent = UIParent, width = 200, height = 60 })
+f_b:setBoxHeader("Mitigation")
+assert(f_b.__box_header, "box_header FontString created via setBoxHeader")
+assert(f_b.__box_header:GetText():match("MITIGATION"), "box header has uppercase title")
+print("✓ v7: Frame box header")
