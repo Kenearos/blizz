@@ -9,7 +9,9 @@ local function list_test_files()
 	local files = {}
 	if lfs_ok then
 		for f in lfs.dir("tests") do
-			if f:match("^test_.+%.lua$") then table.insert(files, "tests." .. f:gsub("%.lua$", "")) end
+			if f:match("^test_.+%.lua$") then
+				table.insert(files, "tests." .. f:gsub("%.lua$", ""))
+			end
 		end
 	else
 		-- fallback: shell glob via io.popen
@@ -39,7 +41,13 @@ for _, modname in ipairs(files) do
 	-- fresh state per test file
 	_G.Blizz = nil
 	for k in pairs(package.loaded) do
-		if k:match("^core%.") or k:match("^ui%.") or k:match("^config%.") or k == modname or k == "tests.mocks.wow_api" then
+		if
+			k:match("^core%.")
+			or k:match("^ui%.")
+			or k:match("^config%.")
+			or k == modname
+			or k == "tests.mocks.wow_api"
+		then
 			package.loaded[k] = nil
 		end
 	end
@@ -57,6 +65,8 @@ end
 
 print(string.format("\n--- %d passed, %d failed ---", passed, failed))
 if failed > 0 then
-	for _, f in ipairs(failures) do print("FAIL:", f.mod) end
+	for _, f in ipairs(failures) do
+		print("FAIL:", f.mod)
+	end
 	os.exit(1)
 end
