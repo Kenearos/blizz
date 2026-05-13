@@ -41,3 +41,27 @@ local db3 = SavedVars:load()
 assert(db3.version == 1, "migration should bump version to 1")
 assert(db3.profiles, "migration should populate profiles")
 print("✓ migration v0 → v1 works")
+
+-- I-08: getPosition / setPosition / clearPosition roundtrip
+_G.BlizzDB = nil
+SavedVars:load()
+assert(SavedVars:getPosition("mitigation") == nil, "no position stored initially")
+SavedVars:setPosition("mitigation", "CENTER", 144, 90, "CENTER")
+local pos = SavedVars:getPosition("mitigation")
+assert(
+	pos and pos.anchor == "CENTER" and pos.x == 144 and pos.y == 90,
+	"setPosition→getPosition roundtrip"
+)
+assert(pos.relativeAnchor == "CENTER", "relativeAnchor stored")
+print("✓ getPosition/setPosition roundtrip")
+
+-- clearPosition removes the entry
+SavedVars:clearPosition("mitigation")
+assert(SavedVars:getPosition("mitigation") == nil, "clearPosition removed entry")
+print("✓ clearPosition works")
+
+-- setPosition coerces non-numeric x/y to 0
+SavedVars:setPosition("test_mod", "TOP", nil, "garbage")
+local p2 = SavedVars:getPosition("test_mod")
+assert(p2.x == 0 and p2.y == 0, "non-numeric x/y → 0 defaults")
+print("✓ setPosition coerces invalid coords")

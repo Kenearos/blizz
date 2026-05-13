@@ -21,7 +21,7 @@ local Threat = {
 
 function Threat:init()
 	self.pill = Frame:new({ name = "BlizzThreatPill", parent = UIParent, width = 78, height = 18 })
-	self.pill:SetPoint("TOP", UIParent, "TOP", -120, -16)
+	addon.restorePosition(self.pill, "threat_pill", "TOP", -120, -16)
 
 	self.pill_label = Text:new({ parent = self.pill, text = "THREAT", style = "default" })
 	if self.pill_label.SetPoint then
@@ -35,7 +35,7 @@ function Threat:init()
 		width = 200,
 		height = 28,
 	})
-	self.lost_alert:SetPoint("CENTER", UIParent, "CENTER", 0, 60)
+	addon.restorePosition(self.lost_alert, "threat_alert", "CENTER", 0, 60)
 
 	self:refresh()
 end

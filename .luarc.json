@@ -23,7 +23,9 @@
     "MockSetMythicPlus",
     "MockSetForces",
     "MockSetTimer",
-    "MockReset"
+    "MockReset",
+    "MockSetUnitDead",
+    "MockSetCombat"
   ],
   "completion.callSnippet": "Replace",
   "hint.enable": true

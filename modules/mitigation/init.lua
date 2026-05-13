@@ -42,7 +42,7 @@ end
 function Mitigation:init()
 	self.frame =
 		Frame:new({ name = "BlizzMitigation", parent = UIParent, width = 220, height = 30 })
-	self.frame:SetPoint("CENTER", UIParent, "CENTER", 144, 90)
+	addon.restorePosition(self.frame, self.id, "CENTER", 144, 90)
 
 	self.shield_block_label = Text:new({ parent = self.frame, text = "SBLK", style = "label" })
 	if self.shield_block_label.SetPoint then

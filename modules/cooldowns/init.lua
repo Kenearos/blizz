@@ -34,7 +34,7 @@ function CDModule:init()
 		width = bar_width,
 		height = bar_height,
 	})
-	self.container:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 192)
+	addon.restorePosition(self.container, self.id, "BOTTOM", 0, 192)
 
 	self.icons = {}
 	for i, spellID in ipairs(order) do

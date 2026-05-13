@@ -32,7 +32,7 @@ function AffixS1:init()
 		width = 280,
 		height = 28,
 	})
-	self.alert:SetPoint("TOP", UIParent, "TOP", 0, -60)
+	addon.restorePosition(self.alert, self.id, "TOP", 0, -60)
 	self.active_units = {} -- nameplate-unit → npcID
 	self.capture_mode = nil -- nil oder "voidbound"/"pulsar"/"devour"/"ascendant"
 end

@@ -34,7 +34,7 @@ function KickRota:init()
 	self.cooldowns = {} -- [guid] = { ready_at = time, name = string, class = string }
 
 	self.panel = Frame:new({ name = "BlizzKickRota", parent = UIParent, width = 180, height = 64 })
-	self.panel:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 20, 80)
+	addon.restorePosition(self.panel, self.id, "BOTTOMLEFT", 20, 80)
 
 	self.header = Text:new({ parent = self.panel, text = "KICK ROTA", style = "label" })
 	if self.header.SetPoint then

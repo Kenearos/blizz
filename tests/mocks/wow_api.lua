@@ -104,6 +104,30 @@ local function make_frame(frameType, name, parent, template)
 	function f:GetParent()
 		return self.__parent
 	end
+	-- I-08 mocks for drag-to-move support
+	function f:SetMovable(v)
+		self.__movable = v and true or false
+	end
+	function f:EnableMouse(v)
+		self.__mouseEnabled = v and true or false
+	end
+	function f:RegisterForDrag(button)
+		self.__dragButton = button
+	end
+	function f:StartMoving()
+		self.__moving = true
+	end
+	function f:StopMovingOrSizing()
+		self.__moving = false
+	end
+	function f:GetPoint()
+		-- Return last SetPoint args if any, in WoW form: anchor, relativeFrame, relativeAnchor, x, y
+		local last = self.__points and self.__points[#self.__points]
+		if not last then
+			return "CENTER", nil, "CENTER", 0, 0
+		end
+		return last[1], last[2], last[3] or last[1], last[4] or 0, last[5] or 0
+	end
 	-- Method stub catch-all for anything else
 	setmetatable(f, {
 		__index = function(_, k)
@@ -218,6 +242,9 @@ _G.C_Spell = {
 }
 
 _G.C_Timer = _G.C_Timer or { After = function(_, _) end }
+_G.InCombatLockdown = function()
+	return Mock.in_combat == true
+end
 
 -- ---------- M+ API Mocks ----------
 Mock.mythicplus = {
@@ -339,6 +366,9 @@ end
 function MockSetUnitDead(unit, dead)
 	Mock.units[unit] = Mock.units[unit] or {}
 	Mock.units[unit].dead = dead and true or false
+end
+function MockSetCombat(in_combat)
+	Mock.in_combat = in_combat and true or false
 end
 function MockReset()
 	Mock.units = {}

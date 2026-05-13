@@ -49,7 +49,7 @@ function TankBuster:init()
 		width = 280,
 		height = 36,
 	})
-	self.alert:SetPoint("CENTER", UIParent, "CENTER", 0, 90)
+	addon.restorePosition(self.alert, self.id, "CENTER", 0, 90)
 	self.active_casts = {} -- castGUID → spellID
 end
 

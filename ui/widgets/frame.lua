@@ -162,6 +162,60 @@ function Frame:new(spec)
 		f.__id_code = make_id_code(f, spec.id_code)
 	end
 
+	-- I-08: Drag-to-Move support. Activated explicitly via Frame:enableDrag(moduleId).
+	-- Uses SavedVars to persist position; combat-lockdown aware.
+	f.__drag_module_id = nil
+	f.__drag_started_in_combat = false
+	function f:enableDrag(moduleId)
+		assert(
+			type(moduleId) == "string" and moduleId ~= "",
+			"enableDrag requires a moduleId string"
+		)
+		self.__drag_module_id = moduleId
+		if self.SetMovable then
+			self:SetMovable(true)
+		end
+		if self.EnableMouse then
+			self:EnableMouse(true)
+		end
+		if self.RegisterForDrag then
+			self:RegisterForDrag("LeftButton")
+		end
+		if self.SetScript then
+			self:SetScript("OnDragStart", function(frame)
+				-- In Combat: WoW blocks SetPoint on protected frames. Our frames are
+				-- non-secure (UIParent-parented), but better safe than the dread popup.
+				if _G.InCombatLockdown and _G.InCombatLockdown() then
+					frame.__drag_started_in_combat = true
+					return
+				end
+				if frame.StartMoving then
+					frame:StartMoving()
+				end
+			end)
+			self:SetScript("OnDragStop", function(frame)
+				if frame.__drag_started_in_combat then
+					frame.__drag_started_in_combat = false
+					return
+				end
+				if frame.StopMovingOrSizing then
+					frame:StopMovingOrSizing()
+				end
+				-- Persist position relative to UIParent's CENTER for stability across resolutions.
+				if frame.GetPoint and addon.SavedVars and addon.SavedVars.setPosition then
+					local anchor, _, relativeAnchor, x, y = frame:GetPoint()
+					addon.SavedVars:setPosition(
+						frame.__drag_module_id,
+						anchor or "CENTER",
+						x or 0,
+						y or 0,
+						relativeAnchor or anchor or "CENTER"
+					)
+				end
+			end)
+		end
+	end
+
 	-- State-API
 	f.__state = "default"
 	function f:getState()

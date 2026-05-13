@@ -81,5 +81,40 @@ function SavedVars:getModuleOption(moduleId, key)
 	return p.module_options[moduleId][key]
 end
 
+-- Position-Persistenz (I-08): jedes Modul speichert sein Frame-Anchor in
+-- BlizzDB.profiles[active].positions[moduleId] = { anchor, relativeAnchor, x, y }.
+-- Wird beim Bootstrap via addon.restorePosition() gelesen; beim OnDragStop
+-- via setPosition() geschrieben.
+
+function SavedVars:getPosition(moduleId)
+	local p = self:getCurrentProfile()
+	if not p then
+		return nil
+	end
+	p.positions = p.positions or {}
+	return p.positions[moduleId]
+end
+
+function SavedVars:setPosition(moduleId, anchor, x, y, relativeAnchor)
+	local p = self:getCurrentProfile()
+	if not p then
+		return
+	end
+	p.positions = p.positions or {}
+	p.positions[moduleId] = {
+		anchor = anchor or "CENTER",
+		relativeAnchor = relativeAnchor or anchor or "CENTER",
+		x = tonumber(x) or 0,
+		y = tonumber(y) or 0,
+	}
+end
+
+function SavedVars:clearPosition(moduleId)
+	local p = self:getCurrentProfile()
+	if p and p.positions then
+		p.positions[moduleId] = nil
+	end
+end
+
 addon.SavedVars = SavedVars
 return SavedVars

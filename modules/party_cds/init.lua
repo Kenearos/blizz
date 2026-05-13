@@ -25,7 +25,7 @@ function PartyCDs:init()
 	self.tracked = {} -- list of { source_guid, source_name, spellID, ready_at, label, name }
 
 	self.panel = Frame:new({ name = "BlizzPartyCDs", parent = UIParent, width = 160, height = 110 })
-	self.panel:SetPoint("RIGHT", UIParent, "RIGHT", -20, 0)
+	addon.restorePosition(self.panel, self.id, "RIGHT", -20, 0)
 
 	self.header = Text:new({ parent = self.panel, text = "PARTY CDS", style = "label" })
 	if self.header.SetPoint then

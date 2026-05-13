@@ -42,7 +42,7 @@ function MPlus:init()
 		width = 240,
 		height = 64,
 	})
-	self.left_frame:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -20)
+	addon.restorePosition(self.left_frame, "mplus_left", "TOPLEFT", 20, -20)
 
 	self.timer_text = Text:new({ parent = self.left_frame, text = "M+ —", style = "value" })
 	if self.timer_text.SetPoint then
@@ -66,7 +66,7 @@ function MPlus:init()
 		width = 160,
 		height = 48,
 	})
-	self.right_frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -20, -20)
+	addon.restorePosition(self.right_frame, "mplus_right", "TOPRIGHT", -20, -20)
 
 	self.deaths_text = Text:new({ parent = self.right_frame, text = "☠ 0", style = "value" })
 	if self.deaths_text.SetPoint then

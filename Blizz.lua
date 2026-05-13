@@ -28,6 +28,36 @@ function addon.registerModule(mod)
 	end
 end
 
+-- I-08 Position-Persistenz helper: Module rufen das nach Frame-Erstellung im init().
+-- Stellt SavedVars-gespeicherte Position wieder her, falls vorhanden, sonst nutzt
+-- den Default. Aktiviert Drag-to-Move auf dem Frame, so dass der User seine
+-- bevorzugte Position einfach via Mouse setzt und sie via SavedVars persistiert.
+--
+--   frame             — der zu positionierende Frame (muss SetPoint + enableDrag haben)
+--   moduleId          — eindeutiger string key in BlizzDB.profiles[active].positions
+--   default_anchor    — fallback "TOP"/"CENTER"/"BOTTOM"/...
+--   default_x, _y     — fallback Pixel-Offsets relativ zu UIParent
+--   default_rel       — optional: relative anchor (defaults to default_anchor)
+function addon.restorePosition(frame, moduleId, default_anchor, default_x, default_y, default_rel)
+	if not frame or not moduleId then
+		return
+	end
+	local p = SavedVars and SavedVars.getPosition and SavedVars:getPosition(moduleId)
+	local anchor = (p and p.anchor) or default_anchor or "CENTER"
+	local rel = (p and p.relativeAnchor) or default_rel or anchor
+	local x = (p and p.x) or default_x or 0
+	local y = (p and p.y) or default_y or 0
+	if frame.ClearAllPoints then
+		frame:ClearAllPoints()
+	end
+	if frame.SetPoint then
+		frame:SetPoint(anchor, _G.UIParent or frame:GetParent(), rel, x, y)
+	end
+	if frame.enableDrag then
+		frame:enableDrag(moduleId)
+	end
+end
+
 function addon:bootstrap()
 	WoWEvents:init()
 	SavedVars:load()

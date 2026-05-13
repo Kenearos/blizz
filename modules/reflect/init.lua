@@ -32,7 +32,7 @@ function Reflect:init()
 		width = 260,
 		height = 32,
 	})
-	self.alert:SetPoint("CENTER", UIParent, "CENTER", 144, 30)
+	addon.restorePosition(self.alert, self.id, "CENTER", 144, 30)
 	self.active_casts = {} -- castGUID → spellID currently flagged
 end
 
