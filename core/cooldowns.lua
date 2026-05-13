@@ -5,47 +5,53 @@ if not addon then
 end
 
 -- core/cooldowns.lua
--- Wrapper um Spell-Cooldown + Charges.
--- Bevorzugt C_Spell.GetSpellCooldown / C_Spell.GetSpellCharges (modern, Midnight 12.0+).
--- Fallback auf alte globale Funktionen (für Mock-Tests und Pre-12.0 WoW).
--- Liefert pro Spell {ready, remaining, percent, charges, maxCharges}.
+-- Wrapper um Spell-Cooldown + Charges. Bevorzugt C_Spell-Namespace (Midnight 12.0+).
+-- Defensive gegen Secret-Values (siehe core/secrets.lua).
+
+local Secrets = addon.Secrets or require("core.secrets")
 
 local Cooldowns = {}
 
 local function read_cooldown(spellID)
-	-- Modern API: C_Spell.GetSpellCooldown returns a table
 	if C_Spell and C_Spell.GetSpellCooldown then
-		local info = C_Spell.GetSpellCooldown(spellID)
-		if info then
-			return info.startTime or 0, info.duration or 0, info.isEnabled and 1 or 0
+		local info = Secrets:pcallRead(C_Spell.GetSpellCooldown, spellID)
+		if type(info) == "table" then
+			return Secrets:safeNumber(info.startTime, 0),
+				Secrets:safeNumber(info.duration, 0),
+				info.isEnabled ~= false
 		end
-		return 0, 0, 1
+		return 0, 0, true
 	end
-	-- Legacy API
 	if _G.GetSpellCooldown then
-		local start, duration, enabled = _G.GetSpellCooldown(spellID)
-		return start or 0, duration or 0, enabled or 1
+		local s, d, e = Secrets:pcallRead(_G.GetSpellCooldown, spellID), nil, nil
+		-- pcall wrapping multi-return: re-call to get all three
+		local ok, ss, dd, ee = pcall(_G.GetSpellCooldown, spellID)
+		if ok then
+			s, d, e = ss, dd, ee
+		end
+		return Secrets:safeNumber(s, 0), Secrets:safeNumber(d, 0), (e or 1) ~= 0
 	end
-	return 0, 0, 1
+	return 0, 0, true
 end
 
 local function read_charges(spellID)
-	-- Modern API: C_Spell.GetSpellCharges returns a table
 	if C_Spell and C_Spell.GetSpellCharges then
-		local info = C_Spell.GetSpellCharges(spellID)
-		if info and info.currentCharges then
-			return info.currentCharges,
-				info.maxCharges,
-				info.cooldownStartTime,
-				info.cooldownDuration
+		local info = Secrets:pcallRead(C_Spell.GetSpellCharges, spellID)
+		if type(info) == "table" and info.currentCharges then
+			return Secrets:safeNumber(info.currentCharges, 0),
+				Secrets:safeNumber(info.maxCharges, 0),
+				Secrets:safeNumber(info.cooldownStartTime, 0),
+				Secrets:safeNumber(info.cooldownDuration, 0)
 		end
 		return nil
 	end
-	-- Legacy API
 	if _G.GetSpellCharges then
-		local c, mc, start, dur = _G.GetSpellCharges(spellID)
-		if c then
-			return c, mc, start, dur
+		local ok, c, mc, start, dur = pcall(_G.GetSpellCharges, spellID)
+		if ok and c then
+			return Secrets:safeNumber(c, 0),
+				Secrets:safeNumber(mc, 0),
+				Secrets:safeNumber(start, 0),
+				Secrets:safeNumber(dur, 0)
 		end
 	end
 	return nil
@@ -53,7 +59,7 @@ end
 
 function Cooldowns:getState(spellID)
 	local start, duration = read_cooldown(spellID)
-	local now = GetTime and GetTime() or 0
+	local now = (GetTime and GetTime()) or 0
 	local charges, maxCharges = read_charges(spellID)
 
 	local state = {
@@ -65,10 +71,9 @@ function Cooldowns:getState(spellID)
 		maxCharges = maxCharges,
 	}
 
-	-- charges available: always considered "ready"
 	if charges and charges > 0 then
 		state.ready = true
-		if duration and duration > 0 and start and start > 0 then
+		if duration > 0 and start > 0 then
 			local elapsed = now - start
 			state.remaining = math.max(0, duration - elapsed)
 			state.percent = math.min(1, elapsed / duration)
@@ -76,7 +81,7 @@ function Cooldowns:getState(spellID)
 		return state
 	end
 
-	if not start or not duration or duration == 0 then
+	if duration == 0 then
 		state.ready = true
 		return state
 	end
