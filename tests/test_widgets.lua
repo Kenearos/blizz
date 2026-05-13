@@ -62,3 +62,20 @@ print("✓ Bar value setter + clamping")
 bar:setValueFromRemaining(5, 10) -- 50% gone, 50% remaining
 assert(math.abs(bar:getValue() - 0.5) < 0.001, "setValueFromRemaining")
 print("✓ Bar setValueFromRemaining")
+
+local Alert = require("ui.widgets.alert")
+
+local alert = Alert:new({ parent = UIParent, text = "REFLECT INCOMING", width = 240, height = 32 })
+assert(alert:getState() == "alert", "Alert default state is alert")
+assert(alert:isPulsing() == false, "Alert not pulsing initially (created hidden)")
+alert:show()
+assert(alert:isShown(), "Alert shown")
+assert(alert:isPulsing(), "Alert pulses when shown")
+alert:hide()
+assert(not alert:isShown(), "Alert hidden")
+assert(not alert:isPulsing(), "Alert stops pulsing when hidden")
+print("✓ Alert show/hide + pulse lifecycle")
+
+alert:setText("KICK NOW")
+assert(alert:getText() == "KICK NOW", "text updated")
+print("✓ Alert text updates")
