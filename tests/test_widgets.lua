@@ -24,3 +24,23 @@ assert(t.__type == "FontString", "Text should be FontString")
 assert(t.__text == "4.8s", "text content set")
 assert(t.__font ~= nil, "font set")
 print("✓ Text:new creates themed font string")
+
+local Icon = require("ui.widgets.icon")
+
+-- Icon: default state = outline, primary color
+local ico = Icon:new({ parent = UIParent, name = "WALL", spellID = 871, size = 38 })
+assert(ico.__type == "Frame", "Icon root should be Frame")
+assert(ico:getState() == "default", "default state initially")
+assert(ico:getLabel() == "WALL", "label set")
+print("✓ Icon default state")
+
+-- Setze auf ready → invertierte Farben
+ico:setReady()
+assert(ico:getState() == "ready", "ready state")
+print("✓ Icon ready state")
+
+-- Setze auf cd → grau + remaining
+ico:setCD(22)
+assert(ico:getState() == "cd", "cd state")
+assert(ico:getRemainingText() == "22s", "remaining text")
+print("✓ Icon cd state with remaining")
