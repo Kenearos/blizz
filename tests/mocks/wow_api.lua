@@ -148,6 +148,12 @@ end
 _G.UnitAura = function(_, _)
 	return nil
 end
+_G.UnitGUID = function(unit)
+	return (Mock.units[unit] or {}).guid
+end
+_G.UnitName = function(unit)
+	return (Mock.units[unit] or {}).name or unit, nil
+end
 _G.GetSpellCooldown = function(spellID)
 	local c = Mock.cooldowns[spellID]
 	if not c then
