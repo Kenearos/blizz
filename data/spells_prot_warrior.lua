@@ -7,8 +7,8 @@ end
 -- data/spells_prot_warrior.lua
 -- Spell-IDs für Protection Warrior in WoW Midnight 12.0.5.
 -- Quelle: Wowhead + Class-Guides. Bei jedem WoW-Patch verifizieren.
--- Hero-Talent-spezifische Spells (Mountain Thane / Colossus) hier NICHT enthalten —
--- werden in einer eigenen Phase nachgepflegt sobald Talents implementiert sind.
+-- Hero-Talent-Spells für Mountain Thane (~96% Usage) + Colossus (~3% Usage)
+-- sind in eigenen sub-tables unten. IDs verifiziert via Wowhead Mai 2026.
 
 local Spells = {}
 
@@ -26,6 +26,7 @@ Spells.defensives = {
 	avatar = 107574, -- offensive but pairs with defensives (CD-rotation)
 	demoralizing_banner = 236320, -- talented (Bannerlord), platziert Banner
 	charge = 100, -- mobility/Charge-Pool
+	demolish = 436358, -- Colossus only: channeled big-damage + 10% DR + stun-immune during channel (45s CD)
 }
 
 Spells.utility = {
@@ -33,6 +34,32 @@ Spells.utility = {
 	heroic_leap = 6544, -- jump mobility
 	intervene = 3411, -- friendly Charge
 	berserker_rage = 18499, -- fear-break, rage burst
+}
+
+-- Mountain Thane hero talent tree (~96% Usage in S1, dominant choice).
+-- Alle Spells sind passive Procs/Buffs — keine active defensives. Diese sub-table
+-- ist für künftige Buff/Proc-Tracker und Aura-Anzeigen relevant, nicht für die
+-- Defensive-CD-Bar. Quelle: wowhead spell-IDs.
+Spells.hero_talent_mountain_thane = {
+	lightning_strikes = 434969, -- passive AoE-Proc auf Melee-Swings
+	thorims_might = 436152, -- passive Buff aktiv während Avatar
+	thunder_blast = 435607, -- transformiert Thunder Clap, stacks bis 2
+	burst_of_power = 437121, -- proc: Shield-Slam-CD-reset (15% chance)
+	crashing_thunder = 436707, -- passive Thunder-Clap-Modifier
+	ground_current = 436148, -- passive AoE-Splash auf Lightning-Strikes
+}
+
+-- Colossus hero talent tree (~3% Usage in S1, niche). Demolish ist die einzige
+-- active ability (auch in Spells.defensives gelistet wegen 10% DR im Channel).
+-- Quelle: wowhead spell-IDs.
+Spells.hero_talent_colossus = {
+	demolish = 436358, -- active 45s CD, channel + 10% DR + stun-immun
+	earthquaker = 440992, -- passive Shockwave-Modifier (-5s CD)
+	boneshaker = 429639, -- passive Shockwave-Modifier (+1s stun + slow)
+	practiced_strikes = 429647, -- passive +15% damage auf Shield Slam/Revenge/Thunder Clap
+	tide_of_battle = 429641, -- passive Revenge-Buff
+	colossal_might = 440989, -- buff-stack resource
+	dominance_of_colossus = 429636, -- passive capstone
 }
 
 -- Reihenfolge im Defensive-CD-Bar (links nach rechts)
@@ -63,6 +90,9 @@ Spells.labels = {
 	[6544] = "LEAP",
 	[3411] = "ITVN",
 	[18499] = "BRSK",
+	[436358] = "DMLSH", -- Demolish (Colossus)
+	[435607] = "TBLST", -- Thunder Blast (Mountain Thane)
+	[437121] = "BURST", -- Burst of Power proc
 }
 
 addon.SpellsProtWarrior = Spells
