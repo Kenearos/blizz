@@ -39,36 +39,37 @@ assert(not MPlus.left_frame:IsShown(), "left_frame hidden after completion")
 assert(not MPlus.right_frame:IsShown(), "right_frame hidden after completion")
 print("✓ CHALLENGE_MODE_COMPLETED → frames hidden")
 
--- Timer + Thresholds
+-- Timer + Thresholds — elapsed wird aus GetTime() - start_time gerechnet,
+-- start_time wird auf CHALLENGE_MODE_START gesetzt. Tests rücken GetTime vor.
 MockSetMythicPlus(true, 1234, 18, 1800) -- 30min par
-MockSetTimer(0)
+MockSetTime(1000)
 MockSetForces(0, 151)
-addon.EventBus:dispatch("CHALLENGE_MODE_START")
+addon.EventBus:dispatch("CHALLENGE_MODE_START") -- start_time = 1000
 
 MPlus:refresh_timer()
 local txt = MPlus.timer_text:GetText() or ""
 assert(txt:match("0") or txt:match("00:00"), "timer at 0s shows 0, got '" .. txt .. "'")
 print("✓ timer at 0:00")
 
-MockSetTimer(600) -- 600s = 33% of 1800s par → +3
+MockSetTime(1600) -- 600s elapsed = 33% of 1800s par → +3
 MPlus:refresh_timer()
 local thr = MPlus.threshold_text:GetText() or ""
 assert(thr:match("%+3"), "should project +3 at 600s, got '" .. thr .. "'")
 print("✓ +3 threshold projection at 10min/30min par")
 
-MockSetTimer(1200) -- 67% of par → +2
+MockSetTime(2200) -- 1200s = 67% → +2
 MPlus:refresh_timer()
 thr = MPlus.threshold_text:GetText() or ""
 assert(thr:match("%+2"), "should project +2 at 20min/30min par, got '" .. thr .. "'")
 print("✓ +2 threshold projection at 20min/30min par")
 
-MockSetTimer(1500) -- 83% of par → +1
+MockSetTime(2500) -- 1500s = 83% → +1
 MPlus:refresh_timer()
 thr = MPlus.threshold_text:GetText() or ""
 assert(thr:match("%+1"), "should project +1 at 25min/30min par, got '" .. thr .. "'")
 print("✓ +1 threshold projection")
 
-MockSetTimer(1900) -- > 100% par → depleted
+MockSetTime(2900) -- 1900s = > 100% → depleted
 MPlus:refresh_timer()
 thr = MPlus.threshold_text:GetText() or ""
 assert(thr:match("DEPLET") or thr:match("depleted"), "depleted state, got '" .. thr .. "'")

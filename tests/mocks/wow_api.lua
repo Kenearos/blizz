@@ -179,6 +179,37 @@ _G.GetSpellInfo = function(spellID)
 	return tostring(spellID), nil, nil
 end
 
+-- Midnight 12.0+: C_Spell-Namespace ist die neue offizielle API
+_G.C_Spell = {
+	GetSpellCooldown = function(spellID)
+		local c = Mock.cooldowns[spellID]
+		if not c then
+			return { startTime = 0, duration = 0, isEnabled = true, modRate = 1 }
+		end
+		return {
+			startTime = c.start,
+			duration = c.duration,
+			isEnabled = c.enable == 1,
+			modRate = 1,
+		}
+	end,
+	GetSpellCharges = function(spellID)
+		local c = Mock.cooldowns[spellID]
+		if not c or not c.charges then
+			return nil
+		end
+		return {
+			currentCharges = c.charges,
+			maxCharges = c.maxCharges or c.charges,
+			cooldownStartTime = c.start,
+			cooldownDuration = c.duration,
+		}
+	end,
+	GetSpellInfo = function(spellID)
+		return { name = tostring(spellID), spellID = spellID }
+	end,
+}
+
 _G.C_Timer = _G.C_Timer or { After = function(_, _) end }
 
 -- ---------- M+ API Mocks ----------

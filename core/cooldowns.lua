@@ -5,21 +5,56 @@ if not addon then
 end
 
 -- core/cooldowns.lua
--- Wrapper um GetSpellCooldown + GetSpellCharges.
+-- Wrapper um Spell-Cooldown + Charges.
+-- Bevorzugt C_Spell.GetSpellCooldown / C_Spell.GetSpellCharges (modern, Midnight 12.0+).
+-- Fallback auf alte globale Funktionen (für Mock-Tests und Pre-12.0 WoW).
 -- Liefert pro Spell {ready, remaining, percent, charges, maxCharges}.
 
 local Cooldowns = {}
 
-function Cooldowns:getState(spellID)
-	local start, duration, _enabled = GetSpellCooldown(spellID)
-	local now = GetTime()
-	local charges, maxCharges = nil, nil
-	if GetSpellCharges then
-		local c, mc = GetSpellCharges(spellID)
+local function read_cooldown(spellID)
+	-- Modern API: C_Spell.GetSpellCooldown returns a table
+	if C_Spell and C_Spell.GetSpellCooldown then
+		local info = C_Spell.GetSpellCooldown(spellID)
+		if info then
+			return info.startTime or 0, info.duration or 0, info.isEnabled and 1 or 0
+		end
+		return 0, 0, 1
+	end
+	-- Legacy API
+	if _G.GetSpellCooldown then
+		local start, duration, enabled = _G.GetSpellCooldown(spellID)
+		return start or 0, duration or 0, enabled or 1
+	end
+	return 0, 0, 1
+end
+
+local function read_charges(spellID)
+	-- Modern API: C_Spell.GetSpellCharges returns a table
+	if C_Spell and C_Spell.GetSpellCharges then
+		local info = C_Spell.GetSpellCharges(spellID)
+		if info and info.currentCharges then
+			return info.currentCharges,
+				info.maxCharges,
+				info.cooldownStartTime,
+				info.cooldownDuration
+		end
+		return nil
+	end
+	-- Legacy API
+	if _G.GetSpellCharges then
+		local c, mc, start, dur = _G.GetSpellCharges(spellID)
 		if c then
-			charges, maxCharges = c, mc
+			return c, mc, start, dur
 		end
 	end
+	return nil
+end
+
+function Cooldowns:getState(spellID)
+	local start, duration = read_cooldown(spellID)
+	local now = GetTime and GetTime() or 0
+	local charges, maxCharges = read_charges(spellID)
 
 	local state = {
 		spellID = spellID,
@@ -33,7 +68,6 @@ function Cooldowns:getState(spellID)
 	-- charges available: always considered "ready"
 	if charges and charges > 0 then
 		state.ready = true
-		-- still track recharge progress for next charge
 		if duration and duration > 0 and start and start > 0 then
 			local elapsed = now - start
 			state.remaining = math.max(0, duration - elapsed)

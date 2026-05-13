@@ -109,10 +109,16 @@ function MPlus:refresh_visibility()
 end
 
 function MPlus:getElapsedTime()
+	-- Bevorzugt: lokal getrackte Startzeit ab CHALLENGE_MODE_START.
+	-- Fallback: GetWorldElapsedTime (alte API, manchmal nil/string in Midnight).
+	if self.start_time and GetTime then
+		return math.max(0, GetTime() - self.start_time)
+	end
 	if not GetWorldElapsedTime then
 		return 0
 	end
-	return GetWorldElapsedTime(1) or 0
+	local t = GetWorldElapsedTime(1)
+	return tonumber(t) or 0
 end
 
 function MPlus:getParTime()
@@ -187,12 +193,14 @@ end
 function MPlus:onEvent(event)
 	if event == "CHALLENGE_MODE_START" then
 		self.deaths = 0
+		self.start_time = GetTime and GetTime() or 0
 		self.deaths_text:SetText("☠ 0")
 		self.penalty_text:SetText("(−0s)")
 		self:refresh_visibility()
 		self:refresh_timer()
 		self:refresh_forces()
 	elseif event == "CHALLENGE_MODE_COMPLETED" then
+		self.start_time = nil
 		self:refresh_visibility()
 	elseif event == "CHALLENGE_MODE_RESET" then
 		self:refresh_visibility()
