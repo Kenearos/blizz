@@ -154,6 +154,13 @@ end
 _G.UnitName = function(unit)
 	return (Mock.units[unit] or {}).name or unit, nil
 end
+_G.UnitClass = function(unit)
+	local u = Mock.units[unit] or {}
+	return u.classLocalized or u.class, u.class
+end
+_G.GetNumGroupMembers = function()
+	return Mock.numGroupMembers or 0
+end
 _G.GetSpellCooldown = function(spellID)
 	local c = Mock.cooldowns[spellID]
 	if not c then
@@ -287,6 +294,9 @@ function MockSetForces(current, total)
 end
 function MockSetTimer(elapsed)
 	Mock.timer_elapsed = elapsed or 0
+end
+function MockSetGroup(members)
+	Mock.numGroupMembers = members or 0
 end
 function MockReset()
 	Mock.units = {}
