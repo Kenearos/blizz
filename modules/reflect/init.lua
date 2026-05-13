@@ -43,9 +43,14 @@ function Reflect:onEvent(event, unit, castGUID, spellID)
 	if event == "UNIT_SPELLCAST_START" then
 		local entry = addon.ReflectSpells and addon.ReflectSpells[spellID]
 		if entry then
+			local was_active = next(self.active_casts) ~= nil
 			self.active_casts[castGUID or tostring(spellID)] = spellID
 			self.alert:setText("REFLECT: " .. (entry.name or tostring(spellID)))
 			self.alert:show()
+			-- Only chime on the rising edge so overlapping casts don't spam.
+			if not was_active and PlaySound and SOUNDKIT and SOUNDKIT.RAID_WARNING then
+				PlaySound(SOUNDKIT.RAID_WARNING)
+			end
 		end
 	elseif
 		event == "UNIT_SPELLCAST_STOP"

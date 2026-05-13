@@ -60,9 +60,18 @@ function TankBuster:onEvent(event, unit, castGUID, spellID)
 	if event == "UNIT_SPELLCAST_START" then
 		local entry = addon.TankBustersS1 and addon.TankBustersS1[spellID]
 		if entry then
+			local was_active = next(self.active_casts) ~= nil
 			self.active_casts[castGUID or tostring(spellID)] = spellID
 			self.alert:setText(build_alert_text(entry))
 			self.alert:show()
+			-- Rising-edge sound cue — high severity gets the louder kit.
+			if not was_active and PlaySound and SOUNDKIT then
+				local kit = (entry.severity == "high") and SOUNDKIT.UI_ALERT_VIOLET_CHARGE_UP
+					or SOUNDKIT.RAID_WARNING
+				if kit then
+					PlaySound(kit)
+				end
+			end
 		end
 	elseif
 		event == "UNIT_SPELLCAST_STOP"

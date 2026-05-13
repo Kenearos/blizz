@@ -246,6 +246,23 @@ _G.InCombatLockdown = function()
 	return Mock.in_combat == true
 end
 
+-- ---------- Sound API Mocks ----------
+Mock.sounds = {} -- list of { kind = "kit"|"file", id = ... } in invocation order
+_G.SOUNDKIT = {
+	RAID_WARNING = 8959,
+	UI_ALERT_VIOLET_CHARGE_UP = 167339,
+	IG_QUEST_LIST_OPEN = 880,
+	-- Add more as needed; numeric IDs are stable enough for testing.
+}
+_G.PlaySound = function(id, _channel)
+	table.insert(Mock.sounds, { kind = "kit", id = id })
+	return true, #Mock.sounds
+end
+_G.PlaySoundFile = function(path, _channel)
+	table.insert(Mock.sounds, { kind = "file", id = path })
+	return true, #Mock.sounds
+end
+
 -- ---------- M+ API Mocks ----------
 Mock.mythicplus = {
 	active = false,
@@ -370,6 +387,15 @@ end
 function MockSetCombat(in_combat)
 	Mock.in_combat = in_combat and true or false
 end
+function MockResetSounds()
+	Mock.sounds = {}
+end
+function MockGetLastPlayedSound()
+	return Mock.sounds[#Mock.sounds]
+end
+function MockGetPlayedSounds()
+	return Mock.sounds
+end
 function MockReset()
 	Mock.units = {}
 	Mock.cooldowns = {}
@@ -380,6 +406,7 @@ function MockReset()
 		{ active = false, mapID = 0, keystoneLevel = 0, affixes = {}, timeLimit = 1800 }
 	Mock.forces = { total = 100, current = 0 }
 	Mock.timer_elapsed = 0
+	Mock.sounds = {}
 	-- NOTE: Mock.frames bleibt — sonst verlieren wir die UIParent/WorldFrame-Refs.
 end
 

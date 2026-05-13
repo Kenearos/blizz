@@ -19,6 +19,7 @@ assert(not TankBuster.alert:IsShown(), "alert starts hidden")
 print("✓ init() creates alert (hidden)")
 
 -- High-severity cast → SHIELD WALL alert
+MockResetSounds()
 addon.EventBus:dispatch("UNIT_SPELLCAST_START", "nameplate1", "cast-tb-1", 88888)
 assert(TankBuster.alert:IsShown(), "high-severity tankbuster shows alert")
 assert(
@@ -28,16 +29,30 @@ assert(
 assert(TankBuster.alert:getText():match("Test Crusher"), "alert text mentions Test Crusher")
 print("✓ high-severity → SHIELD WALL alert")
 
+-- High-severity gets the violet-charge sound, not raid-warning
+local s = MockGetLastPlayedSound()
+assert(
+	s and s.kind == "kit" and s.id == SOUNDKIT.UI_ALERT_VIOLET_CHARGE_UP,
+	"high-severity uses violet charge-up sound"
+)
+print("✓ high-severity → violet charge sound cue")
+
 -- Stop hides alert
 addon.EventBus:dispatch("UNIT_SPELLCAST_STOP", "nameplate1", "cast-tb-1", 88888)
 assert(not TankBuster.alert:IsShown(), "alert hides after stop")
 print("✓ cast stop hides alert")
 
--- Medium-severity → IGNORE PAIN alert
+-- Medium-severity → IGNORE PAIN alert + raid-warning sound
+MockResetSounds()
 addon.EventBus:dispatch("UNIT_SPELLCAST_START", "nameplate2", "cast-tb-2", 88889)
 assert(TankBuster.alert:IsShown(), "medium-severity also shows alert")
 assert(TankBuster.alert:getText():match("IGNORE PAIN"), "medium uses IGNORE PAIN")
-print("✓ medium-severity → IGNORE PAIN alert")
+local s2 = MockGetLastPlayedSound()
+assert(
+	s2 and s2.kind == "kit" and s2.id == SOUNDKIT.RAID_WARNING,
+	"medium-severity uses raid-warning sound"
+)
+print("✓ medium-severity → IGNORE PAIN alert + raid-warning sound")
 
 -- Unknown spell ignored
 addon.EventBus:dispatch("UNIT_SPELLCAST_STOP", "nameplate2", "cast-tb-2", 88889)
