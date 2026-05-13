@@ -167,11 +167,67 @@ _G.GetSpellInfo = function(spellID)
 end
 
 _G.C_Timer = _G.C_Timer or { After = function(_, _) end }
-_G.C_Scenario = _G.C_Scenario or {
-	GetCriteriaInfo = function(_)
-		return nil
+
+-- ---------- M+ API Mocks ----------
+Mock.mythicplus = {
+	active = false,
+	mapID = 0,
+	keystoneLevel = 0,
+	affixes = {},
+	timeLimit = 1800, -- par time in seconds, default 30min
+}
+Mock.forces = {
+	total = 100,
+	current = 0,
+}
+Mock.timer_elapsed = 0 -- seconds since pull
+
+_G.C_ChallengeMode = {
+	GetActiveChallengeMapID = function()
+		return Mock.mythicplus.active and Mock.mythicplus.mapID or nil
+	end,
+	GetActiveKeystoneInfo = function()
+		if not Mock.mythicplus.active then
+			return 0, {}
+		end
+		return Mock.mythicplus.keystoneLevel, Mock.mythicplus.affixes
+	end,
+	GetMapUIInfo = function(mapID)
+		if mapID ~= Mock.mythicplus.mapID then
+			return nil
+		end
+		return "Mock Dungeon", mapID, Mock.mythicplus.timeLimit
 	end,
 }
+
+_G.C_Scenario = {
+	GetInfo = function()
+		if not Mock.mythicplus.active then
+			return nil
+		end
+		return "Mock Dungeon", nil, 1, nil, true
+	end,
+	GetCriteriaInfo = function(index)
+		if not Mock.mythicplus.active or index ~= 1 then
+			return nil
+		end
+		return "Enemy Forces",
+			0,
+			Mock.forces.current >= Mock.forces.total,
+			tostring(Mock.forces.current),
+			Mock.forces.total
+	end,
+	GetStepInfo = function()
+		if not Mock.mythicplus.active then
+			return 0, 0, 0
+		end
+		return 1, 1, 1
+	end,
+}
+
+_G.GetWorldElapsedTime = function(_)
+	return Mock.timer_elapsed
+end
 
 _G.SLASH_BLIZZ1 = nil -- gets set by addon
 _G.SlashCmdList = _G.SlashCmdList or {}
@@ -213,12 +269,29 @@ function MockFireFrameEvent(eventName, ...)
 		end
 	end
 end
+function MockSetMythicPlus(active, mapID, keystoneLevel, timeLimit)
+	Mock.mythicplus.active = active and true or false
+	Mock.mythicplus.mapID = mapID or 0
+	Mock.mythicplus.keystoneLevel = keystoneLevel or 0
+	Mock.mythicplus.timeLimit = timeLimit or 1800
+end
+function MockSetForces(current, total)
+	Mock.forces.current = current or 0
+	Mock.forces.total = total or 100
+end
+function MockSetTimer(elapsed)
+	Mock.timer_elapsed = elapsed or 0
+end
 function MockReset()
 	Mock.units = {}
 	Mock.cooldowns = {}
 	Mock.cleu_listener = nil
 	Mock.threat = 3
 	Mock.time = 1000
+	Mock.mythicplus =
+		{ active = false, mapID = 0, keystoneLevel = 0, affixes = {}, timeLimit = 1800 }
+	Mock.forces = { total = 100, current = 0 }
+	Mock.timer_elapsed = 0
 	-- NOTE: Mock.frames bleibt — sonst verlieren wir die UIParent/WorldFrame-Refs.
 end
 

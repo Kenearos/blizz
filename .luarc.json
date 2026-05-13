@@ -19,6 +19,10 @@
     "MockSetTime",
     "MockSetCLEUListener",
     "MockFireCLEU",
+    "MockFireFrameEvent",
+    "MockSetMythicPlus",
+    "MockSetForces",
+    "MockSetTimer",
     "MockReset"
   ],
   "completion.callSnippet": "Replace",
