@@ -126,8 +126,14 @@ function CombatLog:dispatch(
 end
 
 function CombatLog:init()
-	-- in WoW: ein Frame mit RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED") + CombatLogGetCurrentEventInfo()
-	-- in Tests: via MockSetCLEUListener
+	-- in WoW Midnight 12.0+: COMBAT_LOG_EVENT_UNFILTERED ist als catch-all-Event
+	-- für Addons restricted (Blizzard's Addon-Prune). Registrierung outside of
+	-- allow-listed/guarded contexts kann das ADDON_ACTION_BLOCKED Popup ohne
+	-- Chat-Output triggern. Daher hier nur in Test-Mode wirklich subscriben;
+	-- production läuft ohne CLEU bis wir einen sicheren Pfad gefunden haben.
+	--
+	-- Konsequenz: Death-Counter, Kickrota-Tracking und Party-CDs bleiben stumm
+	-- bis CLEU re-aktiviert ist. Module sind funktionsfähig, sehen nur keine Events.
 	local function on_event(...)
 		self:dispatch(...)
 	end
@@ -135,14 +141,15 @@ function CombatLog:init()
 		MockSetCLEUListener(on_event)
 		return
 	end
-	-- production: WoW frame
-	local f = CreateFrame("Frame", "BlizzCLEU")
-	f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
-	f:SetScript("OnEvent", function()
-		if CombatLogGetCurrentEventInfo then
-			on_event(CombatLogGetCurrentEventInfo())
-		end
-	end)
+	-- production: CLEU bewusst NICHT registriert (siehe Kommentar oben).
+	-- Wenn Blizzard die Restriction lockert, hier wieder einkommentieren:
+	-- local f = CreateFrame("Frame", "BlizzCLEU")
+	-- f:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED")
+	-- f:SetScript("OnEvent", function()
+	-- 	if CombatLogGetCurrentEventInfo then
+	-- 		on_event(CombatLogGetCurrentEventInfo())
+	-- 	end
+	-- end)
 end
 
 addon.CombatLog = CombatLog

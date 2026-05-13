@@ -31,8 +31,33 @@ end
 function addon:bootstrap()
 	WoWEvents:init()
 	SavedVars:load()
+	-- Diagnose-Tracer: capture ADDON_ACTION_BLOCKED/FORBIDDEN mit Stack & function name.
+	-- Schreibt direkt in DEFAULT_CHAT_FRAME (bypassen das normale Print).
+	if CreateFrame and DEFAULT_CHAT_FRAME then
+		local diag = CreateFrame("Frame", "BlizzActionDiag", UIParent)
+		diag:RegisterEvent("ADDON_ACTION_BLOCKED")
+		diag:RegisterEvent("ADDON_ACTION_FORBIDDEN")
+		diag:SetScript("OnEvent", function(_, ev, addonName, funcName)
+			local msg = string.format(
+				"|cffff4444[BlizzDiag]|r %s addon=%s func=%q",
+				tostring(ev),
+				tostring(addonName),
+				tostring(funcName)
+			)
+			DEFAULT_CHAT_FRAME:AddMessage(msg)
+			DEFAULT_CHAT_FRAME:AddMessage("|cffaaaaaa" .. tostring(debugstack(2, 6, 0)) .. "|r")
+			table.insert(
+				addon.errors,
+				{ event = ev, err = (funcName or "?") .. " :: " .. tostring(addonName) }
+			)
+		end)
+	end
+	local p = SavedVars:getCurrentProfile() or {}
+	local disabled = p.disabled or {}
 	for id, mod in pairs(self.modules) do
-		if mod.init then
+		if disabled[id] then
+			DEFAULT_CHAT_FRAME:AddMessage("|cff999999[Blizz]|r module disabled: " .. id)
+		elseif mod.init then
 			local ok, err = pcall(mod.init, mod)
 			if not ok then
 				table.insert(addon.errors, { event = "init:" .. id, err = tostring(err) })
@@ -58,8 +83,34 @@ function addon:registerSlash()
 				local e = addon.errors[i]
 				print(string.format("  [%s] %s: %s", tostring(e.time), e.event, e.err))
 			end
+		elseif msg:match("^disable ") then
+			local mod_id = msg:match("^disable%s+(%S+)")
+			local profile = addon.SavedVars:getCurrentProfile()
+			if profile and mod_id then
+				profile.disabled = profile.disabled or {}
+				profile.disabled[mod_id] = true
+				print(
+					"|cff7ed9ff[Blizz]|r " .. mod_id .. " disabled — /reload um wirksam zu werden"
+				)
+			end
+		elseif msg:match("^enable ") then
+			local mod_id = msg:match("^enable%s+(%S+)")
+			local profile = addon.SavedVars:getCurrentProfile()
+			if profile and mod_id then
+				profile.disabled = profile.disabled or {}
+				profile.disabled[mod_id] = nil
+				print(
+					"|cff7ed9ff[Blizz]|r " .. mod_id .. " enabled — /reload um wirksam zu werden"
+				)
+			end
+		elseif msg == "modules" then
+			for id, _ in pairs(addon.modules) do
+				print("  " .. id)
+			end
 		else
-			print("|cff7ed9ff[Blizz]|r unknown command: " .. msg)
+			print(
+				"|cff7ed9ff[Blizz]|r commands: status, errors, modules, disable <id>, enable <id>"
+			)
 		end
 	end
 end
