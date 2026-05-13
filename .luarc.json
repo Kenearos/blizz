@@ -10,7 +10,16 @@
   "workspace.checkThirdParty": false,
   "diagnostics.globals": [
     "LibStub",
-    "SLASH_BLIZZ1"
+    "SLASH_BLIZZ1",
+    "SlashCmdList",
+    "BlizzDB",
+    "MockSetUnit",
+    "MockSetCooldown",
+    "MockSetThreat",
+    "MockSetTime",
+    "MockSetCLEUListener",
+    "MockFireCLEU",
+    "MockReset"
   ],
   "completion.callSnippet": "Replace",
   "hint.enable": true

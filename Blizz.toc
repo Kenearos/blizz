@@ -2,7 +2,27 @@
 ## Title: Blizz
 ## Version: 0.0.1
 ## Author: kenearos
-## Notes: WoW UI experiment
+## Notes: WoW UI Tank-Interface für Prot Warri M+
 ## SavedVariables: BlizzDB
 
-# Lua files (add as we build)
+# --- Theme ---
+ui/theme.lua
+
+# --- Core ---
+core/eventbus.lua
+core/cooldowns.lua
+core/unitstate.lua
+core/combatlog.lua
+
+# --- Config ---
+config/savedvars.lua
+
+# --- Widgets ---
+ui/widgets/frame.lua
+ui/widgets/text.lua
+ui/widgets/icon.lua
+ui/widgets/bar.lua
+ui/widgets/alert.lua
+
+# --- Main entry ---
+Blizz.lua
