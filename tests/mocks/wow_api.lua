@@ -7,6 +7,7 @@ Mock.units = {}
 Mock.cooldowns = {}
 Mock.cleu_listener = nil
 Mock.time = 1000 -- fake game time, in seconds
+Mock.frames = {} -- tracks all created frames for event-broadcast
 
 local function frame_method_stub() end
 
@@ -112,6 +113,8 @@ local function make_frame(frameType, name, parent, template)
 			return nil
 		end,
 	})
+	-- track frame so MockFireFrameEvent can broadcast to it
+	table.insert(Mock.frames, f)
 	return f
 end
 
@@ -200,12 +203,23 @@ function MockFireCLEU(...)
 		Mock.cleu_listener(...)
 	end
 end
+function MockFireFrameEvent(eventName, ...)
+	for _, f in ipairs(Mock.frames) do
+		if f.__events and f.__events[eventName] then
+			local handler = f.__scripts and f.__scripts["OnEvent"]
+			if handler then
+				handler(f, eventName, ...)
+			end
+		end
+	end
+end
 function MockReset()
 	Mock.units = {}
 	Mock.cooldowns = {}
 	Mock.cleu_listener = nil
 	Mock.threat = 3
 	Mock.time = 1000
+	-- NOTE: Mock.frames bleibt — sonst verlieren wir die UIParent/WorldFrame-Refs.
 end
 
 return Mock

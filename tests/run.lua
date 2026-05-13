@@ -45,8 +45,11 @@ for _, modname in ipairs(files) do
 			k:match("^core%.")
 			or k:match("^ui%.")
 			or k:match("^config%.")
+			or k:match("^modules%.")
+			or k:match("^data%.")
 			or k == modname
 			or k == "tests.mocks.wow_api"
+			or k == "Blizz"
 		then
 			package.loaded[k] = nil
 		end

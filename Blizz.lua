@@ -9,6 +9,7 @@ end
 
 local EventBus = addon.EventBus or require("core.eventbus")
 local SavedVars = addon.SavedVars or require("config.savedvars")
+local WoWEvents = addon.WoWEvents or require("core.wowevents")
 
 addon.modules = addon.modules or {}
 
@@ -22,11 +23,13 @@ function addon.registerModule(mod)
 					mod:onEvent(ev, ...)
 				end
 			end)
+			WoWEvents:register(ev)
 		end
 	end
 end
 
 function addon:bootstrap()
+	WoWEvents:init()
 	SavedVars:load()
 	for id, mod in pairs(self.modules) do
 		if mod.init then
@@ -61,15 +64,16 @@ function addon:registerSlash()
 	end
 end
 
--- In WoW: hook PLAYER_LOGIN to call bootstrap + registerSlash.
--- In tests: caller invokes these explicitly.
+-- In WoW: bridge captures PLAYER_LOGIN; we bootstrap then.
 if CreateFrame then
-	local f = CreateFrame("Frame", "BlizzMain")
-	f:RegisterEvent("PLAYER_LOGIN")
-	f:SetScript("OnEvent", function()
-		addon:bootstrap()
-		addon:registerSlash()
-	end)
+	WoWEvents:init()
+	WoWEvents:register("PLAYER_LOGIN")
+	if EventBus then
+		EventBus:subscribe("PLAYER_LOGIN", function()
+			addon:bootstrap()
+			addon:registerSlash()
+		end)
+	end
 end
 
 return addon
