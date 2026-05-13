@@ -16,7 +16,7 @@ local Text = addon.Text or require("ui.widgets.text")
 
 local KickRota = {
 	id = "kickrota",
-	events = { "UNIT_SPELLCAST_START", "GROUP_ROSTER_UPDATE" },
+	events = { "UNIT_SPELLCAST_SUCCEEDED", "UNIT_SPELLCAST_START", "GROUP_ROSTER_UPDATE" },
 }
 
 -- Build reverse lookup: spellID → class
@@ -51,26 +51,24 @@ function KickRota:init()
 		self.you_text:SetPoint("TOPLEFT", self.panel, "TOPLEFT", 6, -40)
 	end
 
-	-- Subscribe to CombatLog for interrupt-cast tracking
-	local CombatLog = addon.CombatLog or require("core.combatlog")
-	CombatLog:init()
-	CombatLog:on("cast_success", function(payload)
-		self:on_cast_success(payload)
-	end)
+	-- Interrupt-Tracking via UNIT_SPELLCAST_SUCCEEDED (statt CLEU).
+	-- Unit-Events sind in Midnight 12.0 nicht restricted.
 end
 
-function KickRota:on_cast_success(payload)
-	if not payload or not payload.spellID then
+function KickRota:on_cast_success(unit, spellID)
+	if not spellID then
 		return
 	end
-	local entry = self.spell_lookup[payload.spellID]
+	local entry = self.spell_lookup[spellID]
 	if not entry then
 		return
 	end
 	local now = (GetTime and GetTime()) or 0
-	self.cooldowns[payload.sourceGUID or payload.sourceName or "unknown"] = {
+	local guid = UnitGUID and UnitGUID(unit)
+	local name = UnitName and UnitName(unit)
+	self.cooldowns[guid or name or "unknown"] = {
 		ready_at = now + entry.default_cd,
-		name = payload.sourceName or "?",
+		name = name or unit or "?",
 		class = entry.class,
 	}
 end
@@ -148,8 +146,10 @@ function KickRota:refresh()
 	end
 end
 
-function KickRota:onEvent(event)
-	if event == "UNIT_SPELLCAST_START" then
+function KickRota:onEvent(event, unit, castGUID, spellID)
+	if event == "UNIT_SPELLCAST_SUCCEEDED" then
+		self:on_cast_success(unit, spellID)
+	elseif event == "UNIT_SPELLCAST_START" then
 		self:refresh()
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:refresh()

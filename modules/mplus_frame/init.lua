@@ -21,6 +21,8 @@ local MPlus = {
 		"CHALLENGE_MODE_COMPLETED",
 		"SCENARIO_CRITERIA_UPDATE",
 		"PLAYER_ENTERING_WORLD",
+		"UNIT_HEALTH",
+		"PLAYER_DEAD",
 	},
 }
 
@@ -77,13 +79,10 @@ function MPlus:init()
 	end
 
 	self.deaths = 0
+	self.unit_was_dead = {} -- per-unit alive→dead transition tracking
 
-	-- Death counter via CombatLog
-	local CombatLog = addon.CombatLog or require("core.combatlog")
-	CombatLog:init()
-	CombatLog:on("death", function(payload)
-		self:on_death(payload)
-	end)
+	-- Death counter: tracking via UNIT_HEALTH + PLAYER_DEAD (statt CLEU UNIT_DIED).
+	-- CLEU ist in Midnight 12.0 für nicht-guarded Addons blockiert.
 
 	self:refresh_visibility()
 	self:refresh_timer()
@@ -177,22 +176,46 @@ function MPlus:refresh_forces()
 	self.forces_text:SetText(string.format("Forces %d%% (%d/%d)", pct, current, total))
 end
 
-function MPlus:on_death(payload)
-	if not payload or not payload.destGUID or not payload.destGUID:match("^Player%-") then
+local function is_party_unit(unit)
+	if not unit then
+		return false
+	end
+	if unit == "player" then
+		return true
+	end
+	if unit:match("^party[1-4]$") then
+		return true
+	end
+	if unit:match("^raid%d+$") then
+		return true
+	end
+	return false
+end
+
+function MPlus:checkUnitDeath(unit)
+	if not unit or not is_party_unit(unit) then
 		return
 	end
 	if not self:isActive() then
+		-- Track state but don't increment outside M+
+		self.unit_was_dead[unit] = UnitIsDead and UnitIsDead(unit) or false
 		return
 	end
-	self.deaths = self.deaths + 1
-	local penalty = self.deaths * DEATH_PENALTY_SECONDS
-	self.deaths_text:SetText("☠ " .. self.deaths)
-	self.penalty_text:SetText(string.format("(−%ds)", penalty))
+	local isDead = UnitIsDead and UnitIsDead(unit) or false
+	local wasDead = self.unit_was_dead[unit] == true
+	if isDead and not wasDead then
+		self.deaths = self.deaths + 1
+		local penalty = self.deaths * DEATH_PENALTY_SECONDS
+		self.deaths_text:SetText("☠ " .. self.deaths)
+		self.penalty_text:SetText(string.format("(−%ds)", penalty))
+	end
+	self.unit_was_dead[unit] = isDead
 end
 
-function MPlus:onEvent(event)
+function MPlus:onEvent(event, unit)
 	if event == "CHALLENGE_MODE_START" then
 		self.deaths = 0
+		self.unit_was_dead = {}
 		self.start_time = GetTime and GetTime() or 0
 		self.deaths_text:SetText("☠ 0")
 		self.penalty_text:SetText("(−0s)")
@@ -208,6 +231,10 @@ function MPlus:onEvent(event)
 		self:refresh_forces()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		self:refresh_visibility()
+	elseif event == "UNIT_HEALTH" then
+		self:checkUnitDeath(unit)
+	elseif event == "PLAYER_DEAD" then
+		self:checkUnitDeath("player")
 	end
 end
 

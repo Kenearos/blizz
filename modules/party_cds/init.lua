@@ -17,7 +17,7 @@ local MAX_ROWS = 6 -- show top 6 most recently used CDs
 
 local PartyCDs = {
 	id = "party_cds",
-	events = { "GROUP_ROSTER_UPDATE" },
+	events = { "UNIT_SPELLCAST_SUCCEEDED", "GROUP_ROSTER_UPDATE" },
 }
 
 function PartyCDs:init()
@@ -40,27 +40,23 @@ function PartyCDs:init()
 		self.rows[i] = row
 	end
 
-	-- Subscribe via CombatLog
-	local CombatLog = addon.CombatLog or require("core.combatlog")
-	CombatLog:init()
-	CombatLog:on("cast_success", function(payload)
-		self:on_cast_success(payload)
-	end)
+	-- Cast-Success-Tracking via UNIT_SPELLCAST_SUCCEEDED (statt CLEU).
+	-- Unit-Events sind in Midnight 12.0 nicht restricted.
 end
 
-function PartyCDs:on_cast_success(payload)
-	if not payload or not payload.spellID then
+function PartyCDs:on_cast_success(unit, spellID)
+	if not spellID then
 		return
 	end
-	local entry = Data[payload.spellID]
+	local entry = Data[spellID]
 	if not entry then
 		return
 	end
 	local now = (GetTime and GetTime()) or 0
 	table.insert(self.tracked, {
-		source_guid = payload.sourceGUID,
-		source_name = payload.sourceName or "?",
-		spellID = payload.spellID,
+		source_guid = UnitGUID and UnitGUID(unit),
+		source_name = (UnitName and UnitName(unit)) or unit or "?",
+		spellID = spellID,
 		ready_at = now + entry.default_cd,
 		label = entry.label,
 		name = entry.name,
@@ -100,8 +96,10 @@ function PartyCDs:refresh()
 	end
 end
 
-function PartyCDs:onEvent(event)
-	if event == "GROUP_ROSTER_UPDATE" then
+function PartyCDs:onEvent(event, unit, castGUID, spellID)
+	if event == "UNIT_SPELLCAST_SUCCEEDED" then
+		self:on_cast_success(unit, spellID)
+	elseif event == "GROUP_ROSTER_UPDATE" then
 		self:refresh()
 	end
 end

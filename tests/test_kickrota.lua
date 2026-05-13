@@ -53,34 +53,16 @@ assert(
 )
 print("✓ initial roster: all interrupts ready")
 
--- Party1 (Rogue, 15s CD) uses their kick at time 1000 → CD until 1015
+-- party1 (Rogue, 15s CD) uses their kick → tracked via UNIT_SPELLCAST_SUCCEEDED
 MockSetTime(1000)
-addon.CombatLog:dispatch(
-	0,
-	"SPELL_CAST_SUCCESS",
-	false,
-	"Player-RogueGUID",
-	"Stabby",
-	0,
-	0,
-	"Creature-X",
-	"X",
-	0,
-	0,
-	1766,
-	"Kick"
+addon.EventBus:dispatch("UNIT_SPELLCAST_SUCCEEDED", "party1", "cast-rogue-1", 1766) -- 1766 = Rogue Kick
+assert(KickRota.cooldowns["Player-Stabby-1"], "Rogue kick should be tracked by GUID")
+assert(
+	KickRota.cooldowns["Player-Stabby-1"].ready_at == 1015,
+	"Rogue Kick CD should be tracked, expected ready_at=1015, got "
+		.. tostring(KickRota.cooldowns["Player-Stabby-1"].ready_at)
 )
-KickRota:refresh()
-local stabby = nil
-for _, p in ipairs(KickRota:getRoster()) do
-	if p.name == "Stabby" then
-		stabby = p
-	end
-end
--- Note: by name match — the test's mock uses GUID; we need to track by GUID.
--- For now just verify the local tracker recorded SOMETHING:
-assert(KickRota.cooldowns, "cooldowns map exists")
-print("✓ interrupt tracked after SPELL_CAST_SUCCESS")
+print("✓ interrupt tracked via UNIT_SPELLCAST_SUCCEEDED")
 
 -- Reflectable/kickable cast starts on nameplate → KickRota picks next available kicker
 MockSetTime(1005) -- 5s into Rogue's CD, Rogue not ready

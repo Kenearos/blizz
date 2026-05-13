@@ -161,6 +161,13 @@ end
 _G.GetNumGroupMembers = function()
 	return Mock.numGroupMembers or 0
 end
+_G.UnitIsDead = function(unit)
+	return (Mock.units[unit] or {}).dead == true
+end
+_G.UnitIsDeadOrGhost = function(unit)
+	local u = Mock.units[unit] or {}
+	return u.dead == true or u.ghost == true
+end
 _G.GetSpellCooldown = function(spellID)
 	local c = Mock.cooldowns[spellID]
 	if not c then
@@ -328,6 +335,10 @@ function MockSetTimer(elapsed)
 end
 function MockSetGroup(members)
 	Mock.numGroupMembers = members or 0
+end
+function MockSetUnitDead(unit, dead)
+	Mock.units[unit] = Mock.units[unit] or {}
+	Mock.units[unit].dead = dead and true or false
 end
 function MockReset()
 	Mock.units = {}

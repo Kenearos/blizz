@@ -104,31 +104,52 @@ ftxt = MPlus.forces_text:GetText() or ""
 assert(ftxt:match("100"), "forces capped at 100%, got '" .. ftxt .. "'")
 print("✓ forces clamped to 100% on overcap")
 
--- Death counter
+-- Death counter — via UNIT_HEALTH events (CLEU ist in Midnight 12.0 blocked)
+MockSetMythicPlus(true, 1234, 18, 1800)
 addon.EventBus:dispatch("CHALLENGE_MODE_START")
 assert(MPlus.deaths == 0, "deaths reset on start")
 assert(MPlus.deaths_text:GetText() == "☠ 0", "deaths text reset")
 print("✓ deaths reset on start")
 
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Player-Mate1", "Mate1", 0, 0)
-assert(MPlus.deaths == 1, "1 death after party UNIT_DIED")
+-- party1 stirbt: UnitIsDead returnt true + UNIT_HEALTH event
+MockSetUnitDead("party1", true)
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+assert(MPlus.deaths == 1, "1 death after party1 dies, got " .. MPlus.deaths)
 assert(MPlus.deaths_text:GetText() == "☠ 1", "deaths text shows 1")
 assert(MPlus.penalty_text:GetText() == "(−15s)", "penalty shows -15s")
-print("✓ 1 death → ☠ 1 / (−15s)")
+print("✓ 1 death → ☠ 1 / (−15s) via UNIT_HEALTH")
 
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Player-Mate2", "Mate2", 0, 0)
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Player-Mate3", "Mate3", 0, 0)
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Player-Mate1", "Mate1", 0, 0)
-assert(MPlus.deaths == 4, "4 deaths total")
+-- gleiche unit re-fires UNIT_HEALTH ohne respawn → KEINE neue death zählen
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+assert(MPlus.deaths == 1, "no double-count on repeated UNIT_HEALTH while dead")
+print("✓ repeated UNIT_HEALTH while dead doesn't double-count")
+
+-- weitere deaths
+MockSetUnitDead("party2", true)
+addon.EventBus:dispatch("UNIT_HEALTH", "party2")
+MockSetUnitDead("party3", true)
+addon.EventBus:dispatch("UNIT_HEALTH", "party3")
+-- party1 respawnt und stirbt erneut
+MockSetUnitDead("party1", false)
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+MockSetUnitDead("party1", true)
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+assert(MPlus.deaths == 4, "4 deaths total, got " .. MPlus.deaths)
 assert(MPlus.penalty_text:GetText() == "(−60s)", "penalty -60s after 4 deaths")
-print("✓ 4 deaths → ☠ 4 / (−60s)")
+print("✓ 4 deaths → ☠ 4 / (−60s) via UNIT_HEALTH transitions")
 
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Creature-1234", "BadGuy", 0, 0)
-assert(MPlus.deaths == 4, "mob death does not count")
-print("✓ mob deaths ignored")
+-- player death via PLAYER_DEAD
+MockSetUnitDead("player", true)
+addon.EventBus:dispatch("PLAYER_DEAD")
+assert(MPlus.deaths == 5, "PLAYER_DEAD increments, got " .. MPlus.deaths)
+print("✓ PLAYER_DEAD increments death counter")
 
+-- outside M+: deaths nicht inkrementieren
 MockSetMythicPlus(false)
 addon.EventBus:dispatch("CHALLENGE_MODE_COMPLETED")
-addon.CombatLog:dispatch(0, "UNIT_DIED", false, nil, nil, 0, 0, "Player-Mate1", "Mate1", 0, 0)
-assert(MPlus.deaths == 4, "death outside M+ doesn't increment, got " .. MPlus.deaths)
+MockSetUnitDead("party1", false)
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+MockSetUnitDead("party1", true)
+addon.EventBus:dispatch("UNIT_HEALTH", "party1")
+assert(MPlus.deaths == 5, "death outside M+ doesn't increment, got " .. MPlus.deaths)
 print("✓ deaths only counted inside M+")
