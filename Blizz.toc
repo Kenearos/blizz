@@ -1,6 +1,6 @@
 ## Interface: 120005
 ## Title: Blizz
-## Version: 0.1.1
+## Version: 0.2.0
 ## Author: kenearos
 ## Notes: WoW UI Tank-Interface für Prot Warri M+
 ## SavedVariables: BlizzDB
@@ -26,6 +26,7 @@ data/affixes_s1.lua
 data/npcs_midnight_s1.lua
 data/party_interrupts.lua
 data/party_cds.lua
+data/tankbusters_s1.lua
 
 # --- Widgets ---
 ui/widgets/frame.lua
@@ -47,3 +48,4 @@ modules/affix_s1/init.lua
 modules/nameplates/init.lua
 modules/kickrota/init.lua
 modules/party_cds/init.lua
+modules/tankbuster/init.lua
