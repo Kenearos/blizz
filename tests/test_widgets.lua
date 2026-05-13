@@ -44,3 +44,21 @@ ico:setCD(22)
 assert(ico:getState() == "cd", "cd state")
 assert(ico:getRemainingText() == "22s", "remaining text")
 print("✓ Icon cd state with remaining")
+
+local Bar = require("ui.widgets.bar")
+
+-- Bar: füllen/leeren
+local bar = Bar:new({ parent = UIParent, width = 200, height = 12 })
+bar:setValue(0.5)
+assert(math.abs(bar:getValue() - 0.5) < 0.001, "bar value 0.5")
+bar:setValue(0)
+assert(bar:getValue() == 0, "bar value 0")
+bar:setValue(1.2) -- clamp
+assert(bar:getValue() == 1, "bar value clamped to 1")
+bar:setValue(-0.5) -- clamp
+assert(bar:getValue() == 0, "bar value clamped to 0")
+print("✓ Bar value setter + clamping")
+
+bar:setValueFromRemaining(5, 10) -- 50% gone, 50% remaining
+assert(math.abs(bar:getValue() - 0.5) < 0.001, "setValueFromRemaining")
+print("✓ Bar setValueFromRemaining")
