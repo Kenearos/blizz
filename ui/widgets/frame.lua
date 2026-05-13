@@ -60,6 +60,9 @@ function Frame:new(spec)
 
 	-- State-API
 	f.__state = "default"
+	function f:getState()
+		return self.__state
+	end
 	function f:setDefault()
 		self.__state = "default"
 		apply_default(self)
