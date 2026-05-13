@@ -91,9 +91,11 @@ function MPlus:init()
 end
 
 function MPlus:isActive()
-	return C_ChallengeMode
-		and C_ChallengeMode.GetActiveChallengeMapID
-		and C_ChallengeMode.GetActiveChallengeMapID() ~= nil
+	if not C_ChallengeMode or not C_ChallengeMode.GetActiveChallengeMapID then
+		return false
+	end
+	local mapID = C_ChallengeMode.GetActiveChallengeMapID()
+	return mapID ~= nil and mapID ~= 0
 end
 
 function MPlus:refresh_visibility()
@@ -118,7 +120,7 @@ function MPlus:getParTime()
 		return 0
 	end
 	local mapID = C_ChallengeMode.GetActiveChallengeMapID()
-	if not mapID then
+	if not mapID or mapID == 0 then
 		return 0
 	end
 	local _, _, timeLimit = C_ChallengeMode.GetMapUIInfo(mapID)
