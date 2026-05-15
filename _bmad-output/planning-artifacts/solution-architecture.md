@@ -132,6 +132,21 @@ blizz/
 
 ---
 
+### ADR-002b: Repo-Root als npm-Workspace
+
+**Status:** Accepted
+**Context:** Mehrere Konsumenten der ADR-002/003-Entscheidung (Build-Skript, MCP-Server, künftige Tooling-Subpakete) wollen vom Repo-Root aufgerufen werden (`npm test -w mcp-server`, `npm run build:cookbook -w mcp-server`). Ohne Root-Workspace funktioniert das `-w`-Flag nicht.
+**Decision:** Repo-Root erhält eine minimale `package.json` mit `"private": true` und `"workspaces": ["mcp-server"]`. Keine Root-Dependencies, kein Top-Level-Build — nur Workspace-Deklaration.
+**Rationale:**
+- Macht `npm install` vom Root reproducible (installiert alle Workspaces auf einmal)
+- Erlaubt `-w <workspace>`-Flags konsistent in allen Docs, CI-Workflows und Story-Acceptance-Criteria
+- Skaliert für künftige Subpakete (z.B. `claude-skills/`, `tools/`) ohne weitere Refactors
+**Consequences:**
+- Root-`package.json` ist Pflicht — Story B.2 wird darum erweitert
+- WoW-Addon-User, die kein Node nutzen wollen, müssen die Root-`package.json` ignorieren (sie ändert am Lua-Pfad nichts)
+
+---
+
 ### ADR-003: Build-Skript-Sprache — Node/TypeScript
 
 **Status:** Accepted
@@ -142,9 +157,9 @@ blizz/
 - Konsistenz mit ADR-002
 - TypeScript-Typen für Recipe-Schema sind selbst Doku
 **Consequences:**
-- Bash bleibt nur für `scripts/install.sh` (WoW-AddOns-Verzeichnis-Symlink)
-- `package.json` script: `npm run build:cookbook`
-- WoW-Addon kann ohne Node weiter installiert/getestet werden (Lua-Pfad bleibt sauber)
+- Bash bleibt für reine Shell-Wrapper: `scripts/install.sh` (Symlink ins WoW-AddOns-Verzeichnis) und `scripts/update-ketho.sh` (Submodule-Fetch + Pin-File-Update). Build- und Code-Generation-Logik dagegen ausschließlich in TypeScript.
+- npm-Skripte werden über Root-Workspace exposed (siehe ADR-002b): z.B. `npm run build:cookbook -w mcp-server` läuft vom Repo-Root.
+- WoW-Addon kann ohne Node weiter installiert/getestet werden (Lua-Pfad bleibt sauber).
 
 ---
 
@@ -152,7 +167,7 @@ blizz/
 
 **Status:** Accepted
 **Context:** PRD FR-KETHO-01. Alternativen: Build-Time-Pull (curl/git-archive), npm-Paket falls Ketho eines published, eigene API-Datenbank.
-**Decision:** `git submodule` unter `vendor/ketho/`, Pin in `.gitmodules` + dokumentiert in `vendor/ketho.pin`.
+**Decision:** `git submodule` unter `vendor/ketho/`. Der reproducible Pin ist der Submodule-Gitlink im Parent-Repo (Teil jedes Commits in `git ls-tree`). `.gitmodules` enthält ausschließlich URL/Path-Konfiguration und ist *nicht* die Quelle des Pins. Zusätzlich pflegen wir den aktuellen Pin redundant in `vendor/ketho.pin` als Plain-Text-Datei — für menschliche Diff-Lesbarkeit und damit `scripts/update-ketho.sh` einen einfachen Anker hat.
 **Rationale:**
 - Pin = reproducible builds, Drift wird explizit
 - Submodule erlaubt lokale PRs gegen Ketho direkt aus diesem Workspace (Upstream-Strategie aus PRD FR-KETHO-05)
@@ -191,9 +206,9 @@ blizz/
 - Stable URL ist wichtiger als git-history für Discovery (LLM-Tools cachen URL-Inhalte)
 - `llms.txt` (Wegweiser, klein) bleibt committed
 **Consequences:**
-- GitHub Pages-Setup in M1 nötig
-- Build-CI deployed auf Tag-Release
-- Lokal: `npm run build:cookbook` erzeugt File für Inspection
+- GitHub Pages-Setup in Phase 1 nötig
+- Build-CI (`build.yml`) deployed `llms-full.txt` auf Pages bei jedem Push auf `main` (konsistent mit ADR-005 und Story B.17). Zusätzlich bei Tag-Release: Snapshot-Asset am Release attached
+- Lokal: `npm run build:cookbook -w mcp-server` erzeugt File unter `mcp-server/dist/` für Inspection
 
 ---
 
@@ -216,7 +231,7 @@ blizz/
 
 **Status:** Accepted
 **Context:** PRD FR-COOK-01 definiert Schema (Intent · Problem · Code · Stolperfalle · Test). Wie erzwingen?
-**Decision:** Recipe-Markdown hat Front-Matter mit `{id, category, title, tags, test_file}`. Build-Parser validiert. Schema ist TypeScript-Interface in `mcp-server/src/recipe-schema.ts`, JSON-Schema-Export für Editor-Validation.
+**Decision:** Recipe-Markdown hat Front-Matter mit `{id, category, title, tags, source, test_file}`. Das `source`-Feld (`own | wiki-derivative | ketho-derivative`) steuert ADR-011-Attribution-Rendering. Build-Parser validiert. Schema ist TypeScript-Interface in `mcp-server/src/recipe-schema.ts`, JSON-Schema-Export für Editor-Validation.
 **Rationale:**
 - Maschinell parsierbar → MCP-Server kann strukturierte Antworten geben
 - Front-Matter-Felder steuern auch MCP-Tool-Filter (`recipe-search(category: "migrations")`)
@@ -247,16 +262,18 @@ blizz/
 **Status:** Accepted
 **Context:** NFR-REL-04 (Cookbook-Recipe-Test-Coverage 100%), NFR-PERF-01 (Test-Run ≤ 5s).
 **Decision:**
-- Lua-Tests bleiben in `tests/` mit `luajit tests/run.lua` (kein Refactor)
+- Lua-Tests bleiben in `tests/` mit `luajit tests/run.lua` als Runner
+- Der bestehende Runner scannt aktuell nur top-level `tests/test_*.lua` (siehe `tests/run.lua:8-29`). Story A.1 erweitert ihn um rekursives `tests/**/test_*.lua`-Discovery
 - Node-Tests (MCP-Server, Build-Skript) mit Vitest in `mcp-server/test/`
-- Recipe-Test-Cases: Lua-Tests in `tests/cookbook/test_<slug>.lua`, vom existierenden Runner discovered (Naming-Convention reicht)
+- Recipe-Test-Cases: Lua-Tests in `tests/cookbook/test_<slug>.lua`, nach dem Runner-Update vom selben Runner discovered
 **Rationale:**
 - Bestehendes Lua-Harness ist schnell, fokussiert, kein Grund zu ersetzen
 - Vitest ist de-facto-Standard für TS/Node 2026, schnell, Watch-Mode
 - Recipe-Tests laufen im selben Runner wie Modul-Tests → kein zweiter Test-Befehl
 **Consequences:**
-- Zwei Test-Befehle insgesamt: `luajit tests/run.lua` und `npm test -w mcp-server`
-- CI hat zwei parallele Jobs
+- Zwei Test-Befehle insgesamt: `luajit tests/run.lua` und (mit Root-Workspace aus ADR-002b) `npm test -w mcp-server`
+- CI hat zwei parallele Jobs (siehe Story B.15)
+- Story A.1 erhält "Runner-Discovery rekursiv" als Acceptance-Criterion
 
 ---
 
@@ -313,7 +330,7 @@ Markdown-Body folgt Schema: Intent → Problem → Code → Stolperfalle → Tes
                     ┌───────────────────┐
 docs/cookbook/*.md  │                   │
 vendor/ketho/       │ build-cookbook.ts │
-data/wiki-mirror/   │  (Node script)    │
+data-wiki/          │  (Node script)    │
                     │                   │
                     └────────┬──────────┘
                              │
@@ -457,7 +474,7 @@ GitHub Actions weekly cron
      ▼
 ketho-drift.yml:
      ├─► git submodule update --remote vendor/ketho
-     ├─► npm run build:cookbook --check
+     ├─► npm run build:cookbook -w mcp-server -- --check
      ├─► diff dist/mcp-data.json baseline
      └─► falls Drift: auto-create Issue mit Diff-Summary
 

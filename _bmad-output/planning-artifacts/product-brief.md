@@ -12,7 +12,7 @@
 
 Mit dem Midnight-12.0-Patch (live seit 2026-03-02) ist ein großer Teil der Addon-API ersetzt oder eingeschränkt worden. Combat-Data-APIs sind beschnitten, langjährige Globals entfernt, neue "Secret Values" werfen stille Fehler. Bestehende Tutorials und YouTube-Anleitungen sind älter als diese Änderungen; die aktuellste konsolidierte API-Referenz ist `warcraft.wiki.gg` — kuratiert, aber HTML-Wiki, nicht LLM-ingestion-ready. Parallel etabliert sich Vibecoding: Solo-Devs erwarten, mit Claude/GPT/Cursor in Stunden zu liefern, was früher Wochen brauchte. Es fehlt die Brücke: ein Repo, das `Ketho/vscode-wow-api`s Annotations (per git-submodule), Wiki-Migration-Pages und reale Production-Patterns zu einem **task-orientierten Cookbook mit `llms.txt`-Discovery und MCP-Tool-Exposure** konsolidiert.
 
-Blizz konkurriert nicht mit den bestehenden Wissensquellen, sondern konsolidiert sie über einen Build-Step und macht sie LLM-tauglich. Validiert wird das ganze durch die Tank-UI: wenn ein Solo-Dev mit Blizz' Cookbook + LLM eine M+-würdige Tank-UI bauen kann, ist die Datenbank gut genug.
+Blizz konkurriert nicht mit den bestehenden Wissensquellen, sondern konsolidiert sie über einen Build-Step und macht sie LLM-tauglich. Validiert wird das Ganze durch die Tank-UI: wenn ein Solo-Dev mit Blizz' Cookbook + LLM eine M+-würdige Tank-UI bauen kann, ist die Datenbank gut genug.
 
 ## Das Problem
 
@@ -91,7 +91,7 @@ Stars und Installationszahlen werden tracked, aber nicht als Ziele gesetzt — s
 
 ## Scope
 
-Da Kenearos solo arbeitet, gibt es **keine harten Phasen-Deadlines** — der Scope ist fix, die Zeit ist offen. Das Brief unterscheidet zwischen dem **Definition-of-Done für v1.0** (Phase 1, alles muss drin sein bevor wir "v1.0" sagen) und **passiver Distribution**, die parallel zur Entwicklung läuft und keinen eigenen "Launch-Moment" braucht.
+Da Kenearos solo arbeitet, gibt es **keine harten Phasen-Deadlines** — der Scope ist fix, die Zeit ist offen. Der Brief unterscheidet zwischen dem **Definition-of-Done für v1.0** (Phase 1, alles muss drin sein bevor wir "v1.0" sagen) und **passiver Distribution**, die parallel zur Entwicklung läuft und keinen eigenen "Launch-Moment" braucht.
 
 ### Phase 1 — Definition-of-Done für v1.0 (Scope-fix, Zeit-offen)
 
@@ -107,7 +107,7 @@ Da Kenearos solo arbeitet, gibt es **keine harten Phasen-Deadlines** — der Sco
 
 **Ketho-Integration (Pipeline):**
 - `Ketho/vscode-wow-api` als git-submodule unter `vendor/ketho/`
-- Build-Skript in `scripts/build-cookbook.sh` (oder `.lua`/`.js`) das aus Ketho-Annotations + Wiki-Migration-Pages + Blizz-Markdowns die Datenquellen für `llms-full.txt` und MCP-Server rendert
+- Build-Skript in `mcp-server/scripts/build-cookbook.ts` (Sprache durch Architecture festgelegt: TypeScript/Node im selben Workspace wie der MCP-Server) das aus Ketho-Annotations + Wiki-Migration-Pages + Blizz-Markdowns die Datenquellen für `llms-full.txt` und MCP-Server rendert
 - CI-Job, der das Build wöchentlich gegen aktuellen Ketho-Stand fährt (drift-detection)
 
 **MCP-Server (vorgezogen, war v1-M3):**

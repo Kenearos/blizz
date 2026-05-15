@@ -248,8 +248,8 @@ Konkrete Vorteile gegenüber Konkurrenz (siehe Brief §"Was es anders macht"):
 
 ### 10.3 Ketho-Integration & Build (FR-KETHO)
 
-- **FR-KETHO-01**: `Ketho/vscode-wow-api` als git-submodule unter `vendor/ketho/`, Commit-Pin in `.gitmodules` und im Repo-Pin-File festgehalten.
-- **FR-KETHO-02**: `scripts/build-cookbook.*` ingestiert Ketho-Annotations + Wiki-Migration-Pages + `docs/cookbook/` → erzeugt `llms-full.txt` und JSON-Datenquellen für MCP.
+- **FR-KETHO-01**: `Ketho/vscode-wow-api` als git-submodule unter `vendor/ketho/`. Der maßgebliche Commit-Pin ist der Submodule-Gitlink im Parent-Repo (Bestandteil jedes Commits). `.gitmodules` enthält nur URL/Path-Konfiguration. Zusätzlich wird der Pin redundant in `vendor/ketho.pin` als Klartext festgehalten (für Drift-Diff-Lesbarkeit und Tooling).
+- **FR-KETHO-02**: `mcp-server/scripts/build-cookbook.ts` ingestiert Ketho-Annotations + Wiki-Migration-Pages + `docs/cookbook/` → erzeugt `llms-full.txt` und JSON-Datenquellen für MCP. Wird via npm-Workspace-Root als `npm run build:cookbook -w mcp-server` aufgerufen.
 - **FR-KETHO-03**: Build ist idempotent und deterministisch — gleicher Input → gleicher Output (für Reproducibility und Diff-Reviews).
 - **FR-KETHO-04**: CI-Workflow (GitHub Actions) führt Build wöchentlich gegen aktuellen Ketho-Stand. Drift = automatisches Issue.
 - **FR-KETHO-05**: Annotation-Lücken, die beim Recipe-Schreiben auffallen, sind als Upstream-PR an Ketho einzureichen (Prozess in `CONTRIBUTING.md` dokumentiert, Commit-Footer-Template "Discovered while building github.com/kenearos/blizz").
@@ -291,7 +291,7 @@ Konkrete Vorteile gegenüber Konkurrenz (siehe Brief §"Was es anders macht"):
 
 - **NFR-REL-01**: Tank-UI: 0 unbehandelte Production-Errors / Woche im Eigeneinsatz (Definition: keine roten `/blizz errors`).
 - **NFR-REL-02**: Doku-Build ist deterministisch und idempotent.
-- **NFR-REL-03**: MCP-Server hat Health-Check-Endpoint und log-strukturierte Fehlerausgabe.
+- **NFR-REL-03**: MCP-Server exposed ein stdio-basiertes Health-Check-Tool (`health-check` Tool-Call ohne Netzwerk-Endpoint, konsistent mit NFR-SEC-01 und ADR-009) und schreibt log-strukturierte Fehlerausgabe auf stderr.
 - **NFR-REL-04**: Cookbook-Test-Coverage: 100% der Recipes haben mindestens einen Test-Case.
 
 ### 11.3 Maintainability (NFR-MAINT)

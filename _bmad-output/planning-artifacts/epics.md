@@ -26,11 +26,11 @@ draftMode: 'auto-drafted-from-prd-arch-v1'
 Vier Epics, gemappt auf PRD-Sektion 14:
 
 - **Epic A — Wissensbank + Discovery** (16 Stories): Cookbook-Schema, Pattern-Recipes, Migration-Recipes, `llms.txt`, `AGENTS.md`, `adopters.md`
-- **Epic B — Ketho-Pipeline + MCP** (17 Stories): git-submodule, Build-Skript, MCP-Server mit drei Tools, CI-Workflows, README-Snippets, Registry
+- **Epic B — Ketho-Pipeline + MCP** (18 Stories): git-submodule, Build-Skript, MCP-Server mit drei Tools, CI-Workflows, README-Snippets, Registry, Upstream-PR-Prozess
 - **Epic C — Reference-Implementations** (4 Stories): Tank-UI-Polish, from-scratch Healer-Cooldown-Tracker mit Claude-Session-Transcript
 - **Epic D — Passive Distribution** (4 Stories): Awesome-Lists, Wago/CurseForge, Skills-Marketplace, Lizenz-Klarstellung
 
-**Gesamt: 41 Stories.** Phase-1-DoD = alle Stories Done. Keine harte Reihenfolge zwischen Epics, aber innerhalb Epic B gilt: B.1 → B.2 vor B.3..B.7; B.8..B.10 nach B.7; B.15..B.17 nach allem anderen.
+**Gesamt: 42 Stories.** Phase-1-DoD = alle Stories Done. Keine harte Reihenfolge zwischen Epics, aber innerhalb Epic B gilt: B.1 → B.2 vor B.3..B.7; B.8..B.10 nach B.7; B.15..B.17 nach allem anderen; B.18 (Upstream-Prozess-Doku) kann jederzeit parallel laufen.
 
 ## Requirements Inventory
 
@@ -58,12 +58,16 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 |---|---|
 | FR-COOK-01..05 | A.1, A.2–A.13 |
 | FR-DISC-01..04 | A.14, A.15, A.16 |
-| FR-KETHO-01..05 | B.1, B.4, B.16 |
+| FR-KETHO-01 (Submodule + Pin) | B.1 |
+| FR-KETHO-02 (Build-Skript) | B.3, B.4, B.5, B.6, B.7 |
+| FR-KETHO-03 (Determinismus) | B.6, B.7 |
+| FR-KETHO-04 (CI Drift-Detection) | B.16 |
+| FR-KETHO-05 (Upstream-PR-Prozess + CONTRIBUTING.md) | B.18 |
 | FR-MCP-01..06 | B.8, B.9, B.10, B.11, B.12, B.13, B.14 |
 | FR-REF-01..03 | C.1, C.2, C.3, C.4 |
 | FR-CLI-01..03 | A.1 (--check Hook in Build), bestehende Lua-Slash-Commands bleiben |
 | NFR-PERF-* | B.2 (Test-Setup), B.7 (Build-Perf-Constraint) |
-| NFR-REL-* | C.1 (Tank-UI-Audit), B.2 (Vitest-Setup), A.x (Recipe-Tests) |
+| NFR-REL-* | C.1 (Tank-UI-Audit), B.2 (Vitest-Setup), A.x (Recipe-Tests), B.8 (Health-Check-Tool über stdio) |
 | NFR-MAINT-* | bestehende stylua-Pflege; A.1 (Recipe-Schema-Validation) |
 | NFR-SEC-* | D.4 (Lizenz), B.8..B.10 (stdio-only Implementation) |
 | NFR-COMPAT-* | bestehend (TOC, LuaJIT); A.15 (AGENTS.md) |
@@ -92,7 +96,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 
 **Acceptance Criteria:**
 - **Given** ein neues Recipe wird unter `docs/cookbook/<category>/<slug>.md` angelegt,
-  **When** der Build-Validator läuft (`npm run build:cookbook --check`),
+  **When** der Build-Validator läuft (`npm run build:cookbook -w mcp-server -- --check`),
   **Then** wird das Front-Matter (`id`, `category`, `title`, `tags`, `source`, `test_file`) gegen das Schema geprüft und der Body auf die Schema-Sektionen (Intent, Problem, Code, Stolperfalle, Test).
 - **Given** das Cookbook hat ≥ 1 Recipe,
   **When** Build läuft,
@@ -100,6 +104,9 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 - **Given** ein Recipe fehlt im `test_file`-Pfad,
   **When** Build/CI läuft,
   **Then** fail mit klarer Fehlermeldung.
+- **Given** der bestehende Lua-Runner `tests/run.lua` scannt aktuell nur top-level `tests/test_*.lua` (siehe `tests/run.lua:8-29`),
+  **When** A.1 abgeschlossen ist,
+  **Then** wurde der Runner so erweitert, dass er `tests/**/test_*.lua` rekursiv discovered (Voraussetzung dafür, dass `tests/cookbook/test_<slug>.lua` aus den nachfolgenden Stories tatsächlich läuft).
 
 ### Story A.2: Recipe — EventBus mit Pcall-Containment (pattern)
 
@@ -140,8 +147,8 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 **Acceptance Criteria:**
 - **Given** Recipe + Test existieren,
   **Then** Code-Snippet zeigt `C_Spell.GetSpellCooldown` mit Pcall + Secret-Check + Fallback-Sentinel.
-- **Given** Test feuert `MockSetCooldown("Shield Block", 5)`,
-  **Then** Wrapper liefert `{remaining=5, ...}`.
+- **Given** Test feuert `MockSetCooldown(<spellID>, GetTime(), 5)` (Signatur `MockSetCooldown(spellID, start, duration, charges?, maxCharges?)` aus `tests/mocks/wow_api.lua:334`),
+  **Then** Wrapper liefert ein Cooldown-Objekt mit `remaining ≈ 5` und secret-value-sicher.
 
 ### Story A.5: Recipe — UnitState-Wrapper (pattern)
 
@@ -152,7 +159,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 **Acceptance Criteria:**
 - **Given** Recipe + Test existieren,
   **Then** zeigt der Code `UnitHealth`/`UnitHealthMax` mit Wrapper.
-- **Given** Test feuert `MockSetUnitHealth("player", 0.5)`,
+- **Given** Test feuert `MockSetUnit("player", { health = 50, maxHealth = 100 })` (Signatur `MockSetUnit(unit, props)` aus `tests/mocks/wow_api.lua:331`),
   **Then** Wrapper liefert ratio 0.5 ± epsilon.
 
 ### Story A.6: Recipe — Module-Registration & Bootstrap-Flow
@@ -270,7 +277,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 
 **Acceptance Criteria:**
 - **Given** `CLAUDE.md` wird editiert,
-  **When** `npm run build:cookbook` läuft,
+  **When** `npm run build:cookbook -w mcp-server` läuft,
   **Then** wird `AGENTS.md` mit identischem Kern-Inhalt + Tool-Spektrum-Header neu generiert.
 - **Given** `AGENTS.md` im Repo,
   **Then** ist sie konsistent mit `CLAUDE.md` (CI-Check).
@@ -315,14 +322,15 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 ### Story B.2: `mcp-server/`-Workspace Setup
 
 **As a** Maintainer,
-**I want** einen TypeScript/Node-Workspace unter `mcp-server/`,
-**so that** Build-Skript und MCP-Server Code teilen und Tests laufen.
+**I want** einen TypeScript/Node-Workspace unter `mcp-server/` plus eine minimale Root-`package.json` mit Workspace-Deklaration (ADR-002b),
+**so that** Build-Skript und MCP-Server Code teilen, Tests laufen und `-w mcp-server`-Aufrufe vom Repo-Root funktionieren.
 
 **Acceptance Criteria:**
 - **Given** `mcp-server/package.json` existiert,
   **Then** mit `@modelcontextprotocol/sdk`, `vitest`, `typescript`, ESM-Modul-Typ.
-- **Given** `npm install`,
-  **When** `npm test -w mcp-server`,
+- **Given** im Repo-Root existiert eine minimale `package.json` mit `"private": true` und `"workspaces": ["mcp-server"]` (ADR-002b),
+  **And** `mcp-server/package.json` mit `vitest`, `typescript`, ESM-Modul-Typ,
+  **When** ich `npm install` und dann `npm test -w mcp-server` vom Repo-Root ausführe,
   **Then** läuft Vitest (ggf. zunächst leer/grün).
 - **Given** `tsconfig.json` strict-Mode,
   **Then** TypeScript-Build clean.
@@ -399,7 +407,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 **so that** ich korrekte 12.0-Calls generieren kann.
 
 **Acceptance Criteria:**
-- **Given** MCP-Server lauft via stdio,
+- **Given** MCP-Server läuft via stdio,
   **When** Tool-Call `wow-api-search({query: "UnitHealth"})`,
   **Then** Antwort enthält Namespace, Signatur, Cookbook-Cross-Ref (z.B. Secrets-Defense), Stolperfalle.
 - **Given** kein Match,
@@ -486,9 +494,9 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 **so that** keine roten Builds gemerged werden.
 
 **Acceptance Criteria:**
-- **Given** PR mit Lua-Änderung,
-  **When** `test.yml` läuft,
-  **Then** `luajit tests/run.lua` und `npm test -w mcp-server` werden ausgeführt.
+- **Given** PR mit Lua- oder TS-Änderung,
+  **When** `test.yml` läuft (Repo ist npm-Workspace mit `mcp-server` als Workspace, siehe ADR-002b),
+  **Then** `luajit tests/run.lua` und `npm test -w mcp-server` werden vom Repo-Root ausgeführt.
 - **Given** stylua-Verstoß,
   **Then** Workflow fail.
 
@@ -500,7 +508,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
 
 **Acceptance Criteria:**
 - **Given** Cron triggert,
-  **When** Action läuft `git submodule update --remote vendor/ketho` + `npm run build:cookbook --check`,
+  **When** Action läuft `git submodule update --remote vendor/ketho` + `npm run build:cookbook -w mcp-server -- --check` (vom Repo-Root, dank Workspace-Setup aus ADR-002b),
   **Then** bei Drift wird Issue mit Diff-Summary erstellt.
 - **Given** kein Drift,
   **Then** Action no-op.
@@ -519,6 +527,21 @@ Vier Epics, gemappt auf PRD-Sektion 14:
   **Then** liefert das aktuelle `llms-full.txt`.
 - **Given** Tag-Release,
   **Then** wird `llms-full.txt` auch als Release-Asset attached.
+
+### Story B.18: Upstream-PR-Prozess für Ketho-Annotation-Lücken (CONTRIBUTING.md)
+
+**As a** Recipe-Autor,
+**I want** einen dokumentierten Prozess für Ketho-Upstream-PRs (CONTRIBUTING.md-Sektion + Commit-Footer-Template + Checkliste),
+**so that** Annotation-Lücken systematisch (statt ad-hoc) als PRs an `Ketho/vscode-wow-api` zurückfließen — gemäß FR-KETHO-05 und ADR-004.
+
+**Acceptance Criteria:**
+- **Given** `CONTRIBUTING.md` existiert im Repo-Root,
+  **Then** enthält sie eine Sektion "Ketho-Upstream-Prozess" mit (a) Schritt-für-Schritt-Anleitung, (b) Commit-Footer-Template `Discovered while building github.com/kenearos/blizz`, (c) Hinweis auf `scripts/update-ketho.sh` für Pin-Update nach Merge.
+- **Given** ein Recipe-Autor findet eine Annotation-Lücke,
+  **When** sie dem Prozess folgen,
+  **Then** entsteht ein Upstream-PR; falls abgelehnt, beschreibt der Prozess Fallback auf `vendor/ketho-patches/` (siehe ADR-004 Fallback).
+- **Given** Repo-Doku-Index,
+  **Then** wird `CONTRIBUTING.md` vom README verlinkt.
 
 ---
 
