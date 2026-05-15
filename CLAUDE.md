@@ -2,87 +2,87 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project
+## Projekt
 
-Blizz is a standalone WoW UI addon (tank-focused, Prot Warrior M+) targeting the **Midnight 12.0** client. Runtime is LuaJIT 2.1 / Lua 5.1 semantics — *not* standard Lua 5.3+. No Ace3, no oUF, no runtime dependencies.
+Blizz ist ein standalone WoW-UI-Addon (Tank-Fokus, Prot Warri M+) für den **Midnight 12.0**-Client. Runtime ist LuaJIT 2.1 mit Lua-5.1-Semantik — *nicht* Standard-Lua 5.3+. Kein Ace3, kein oUF, keine Runtime-Dependencies.
 
-Long-form docs live in `docs/cookbook/` (architecture, Midnight 12.0 API changes, testing) and `README.md`. Read `docs/cookbook/02-architecture.md` before making non-trivial structural changes.
+Ausführliche Doku liegt unter `docs/cookbook/` (Architektur, Midnight-12.0-API-Änderungen, Testing) und in der `README.md`. Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
 
-## Common commands
+## Häufige Kommandos
 
 ```bash
-# Full test suite (headless, ~130ms)
+# Komplette Test-Suite (headless, ~130ms)
 luajit tests/run.lua
 
-# Single test file
+# Einzelner Test
 luajit -e 'package.path="./?.lua;./?/init.lua;"..package.path; require("tests.test_eventbus")'
 
-# Format (must be clean before commit)
+# Format (muss vor Commit clean sein)
 stylua .
 stylua --check .
 
-# Install / symlink into the WoW AddOns folder
-./scripts/install.sh                       # autodetect common Linux paths
-./scripts/install.sh /path/to/Interface/AddOns   # explicit
+# Symlink ins WoW-AddOns-Verzeichnis
+./scripts/install.sh                              # Autodetect typischer Linux-Pfade
+./scripts/install.sh /pfad/zu/Interface/AddOns    # explizit
 ```
 
-In-game after edits: `/reload`, then `/blizz status` (other slash subcommands: `errors`, `modules`, `disable <id>`, `enable <id>`, `capture <bargain>`). There is no build step — files are loaded directly by WoW per the TOC.
+Im Spiel nach Edits: `/reload`, dann `/blizz status` (weitere Slash-Subcommands: `errors`, `modules`, `disable <id>`, `enable <id>`, `capture <bargain>`). Keinen Build-Step — WoW lädt die Files direkt gemäß TOC.
 
-## Architecture
+## Architektur
 
-Bootstrap flow (see `Blizz.lua`):
+Bootstrap-Flow (siehe `Blizz.lua`):
 
-1. TOC loads files top-to-bottom. `core/*` → `config/savedvars.lua` → `data/*` → `ui/*` → `Blizz.lua` → `modules/*/init.lua`.
-2. Each module file ends with `addon.registerModule(self)`. Registration subscribes the module's `onEvent` to the internal EventBus for each entry in `self.events`, and ref-counts a `frame:RegisterEvent` via `core/wowevents.lua`.
-3. The bridge frame (`BlizzEventBridge`) waits for WoW's `PLAYER_LOGIN`. On fire, `addon:bootstrap()` runs `SavedVars:load()` (with version migration), then `pcall`s each module's `init` so one bad module cannot break the others.
-4. WoW frame events are dispatched into `core/eventbus.lua`, which `pcall`s every subscriber and pushes errors into a 50-entry ring buffer at `addon.errors` (visible via `/blizz errors`).
+1. TOC lädt Files top-down: `core/*` → `config/savedvars.lua` → `data/*` → `ui/*` → `Blizz.lua` → `modules/*/init.lua`.
+2. Jedes Modul-File endet mit `addon.registerModule(self)`. Die Registrierung abonniert `onEvent` des Moduls beim internen EventBus für jeden Eintrag in `self.events` und ref-counted ein `frame:RegisterEvent` via `core/wowevents.lua`.
+3. Der Bridge-Frame (`BlizzEventBridge`) wartet auf WoWs `PLAYER_LOGIN`. Beim Feuern läuft `addon:bootstrap()`: `SavedVars:load()` (mit Version-Migration), dann `pcall` auf jedes `mod.init` — ein kaputtes Modul kann die anderen nicht reißen.
+4. WoW-Frame-Events landen über die Bridge im `core/eventbus.lua`. Der Bus `pcall`t jeden Subscriber und schiebt Fehler in einen Ring-Buffer (max 50) unter `addon.errors` (sichtbar via `/blizz errors`).
 
-Module contract — every `modules/*/init.lua` follows this shape:
+Modul-Kontrakt — jedes `modules/*/init.lua` folgt diesem Muster:
 
 ```lua
 local _, addon = ...
-if not addon then addon = _G.Blizz or {}; _G.Blizz = addon end  -- dual-load: WoW TOC + headless require
+if not addon then addon = _G.Blizz or {}; _G.Blizz = addon end  -- dual-load: WoW-TOC + headless require
 
 local Mod = {
-  id = "mitigation",                              -- unique key (also used for disable/positions)
+  id = "mitigation",                              -- eindeutig (auch Key für disable/positions)
   events = { "SPELL_UPDATE_COOLDOWN", "UNIT_AURA" },
-  init = function(self) ... end,                  -- frames + state, called once after PLAYER_LOGIN
+  init = function(self) ... end,                  -- Frames + State, einmalig nach PLAYER_LOGIN
   onEvent = function(self, event, ...) ... end,
 }
 addon.registerModule(Mod)
 return Mod
 ```
 
-Combat-API reads (`UnitHealth`, `C_Spell.GetSpellCooldown`, …) go through `core/unitstate.lua` / `core/cooldowns.lua` which wrap calls in `pcall` and check `issecretvalue()` via `core/secrets.lua`. Don't call those WoW APIs directly from modules — Midnight 12.0 returns secret values that silently break arithmetic.
+Combat-API-Reads (`UnitHealth`, `C_Spell.GetSpellCooldown`, …) gehen durch `core/unitstate.lua` / `core/cooldowns.lua`, die `pcall`en und über `core/secrets.lua` `issecretvalue()` prüfen. **Diese WoW-APIs niemals direkt aus Modulen aufrufen** — Midnight 12.0 liefert Secret Values zurück, die stille Arithmetik-Fehler verursachen.
 
-UI goes through `ui/widgets/*` (Frame, Text, Icon, Bar, Alert) with theme tokens from `ui/theme.lua`. State changes are method calls (`frame:setReady() / :setCD() / :setAlert() / :setDefault()`) — never raw `:SetBackdropColor`. This is what makes the widgets re-skinnable and what makes tests assert `frame:getState() == "ready"` instead of inspecting colors.
+UI läuft komplett über `ui/widgets/*` (Frame, Text, Icon, Bar, Alert) mit Theme-Tokens aus `ui/theme.lua`. State-Wechsel sind Methodencalls (`frame:setReady() / :setCD() / :setAlert() / :setDefault()`) — niemals rohes `:SetBackdropColor` aus Modulen. So bleiben Widgets reskinbar und Tests können `frame:getState() == "ready"` asserten statt Farben zu inspizieren.
 
-Position persistence: in `init()`, after creating your frame, call `addon.restorePosition(frame, self.id, default_anchor, default_x, default_y)`. It loads from `BlizzDB.profiles[active].positions[id]` if present, otherwise the default, and enables drag-to-move that writes back via `SavedVars:setPosition`.
+Positions-Persistenz: in `init()` nach Frame-Erstellung `addon.restorePosition(frame, self.id, default_anchor, default_x, default_y)` aufrufen. Lädt aus `BlizzDB.profiles[active].positions[id]` falls vorhanden, sonst Default, und schaltet Drag-to-Move ein, das via `SavedVars:setPosition` zurückschreibt.
 
-SavedVars schema (`config/savedvars.lua`) has a version field and a `migrators` table keyed by old version. To change the schema: bump `CURRENT_VERSION`, add a migrator from `[v-1]` to `v`.
+SavedVars-Schema (`config/savedvars.lua`) hat ein `version`-Feld und eine `migrators`-Tabelle keyed by alter Version. Schema ändern: `CURRENT_VERSION` hochziehen und Migrator von `[v-1]` nach `v` ergänzen.
 
-## Adding a new module / file (load-order rules)
+## Neues Modul / File hinzufügen (Lade-Reihenfolge)
 
-1. Create `modules/<name>/init.lua` using the module contract above.
-2. **Append it to `Blizz.toc` in load order** — modules go *after* `Blizz.lua`; anything they `require` (core/data/ui) must appear *before* `Blizz.lua`. Files not listed in the TOC are silently ignored by WoW.
-3. If the file declares a new global (e.g. another `SLASH_*` constant or addon-wide table), add it to `diagnostics.globals` in `.luarc.json` so lua-language-server doesn't flag it.
-4. Add `tests/test_<name>.lua`. The runner discovers `tests/test_*.lua` automatically.
+1. `modules/<name>/init.lua` nach Modul-Kontrakt anlegen.
+2. **In `Blizz.toc` in korrekter Reihenfolge eintragen** — Module *nach* `Blizz.lua`; alles was sie `require`n (core/data/ui) muss *vor* `Blizz.lua` stehen. Files, die nicht in der TOC stehen, ignoriert WoW stillschweigend.
+3. Neue Globals (weitere `SLASH_*`-Konstanten, addonweite Tables) in `.luarc.json` unter `diagnostics.globals` ergänzen, sonst meckert lua-language-server.
+4. `tests/test_<name>.lua` anlegen — der Runner discovert `tests/test_*.lua` automatisch.
 
 ## Testing
 
-`tests/mocks/wow_api.lua` stubs the WoW global surface (CreateFrame, UnitHealth, GetTime, C_Spell.*, CLEU listener, …) and exposes `MockSet*` / `MockFire*` helpers for tests to drive state and fire events. The mock uses a catch-all `__index` that returns no-op functions for any `Set*`/`Get*` method you forgot — so missing stubs won't crash tests, they'll just silently do nothing.
+`tests/mocks/wow_api.lua` stubt die WoW-Globals (CreateFrame, UnitHealth, GetTime, C_Spell.*, CLEU-Listener, …) und stellt `MockSet*` / `MockFire*`-Helfer bereit, mit denen Tests State setzen und Events feuern. Der Mock hat ein Catch-all-`__index`, das für jede vergessene `Set*`/`Get*`-Methode eine No-op-Funktion zurückgibt — fehlende Stubs crashen also nicht, sie passieren stillschweigend.
 
-When a module starts calling a WoW API not yet mocked:
-1. Add the stub in `tests/mocks/wow_api.lua` (and a `MockSetX` control helper if state-bearing).
-2. Add the helper name to `diagnostics.globals` in `.luarc.json`.
+Wenn ein Modul eine WoW-API anfasst, die noch nicht gemockt ist:
+1. Stub in `tests/mocks/wow_api.lua` ergänzen (plus `MockSetX`-Helper falls State-tragend).
+2. Helper-Namen in `.luarc.json` unter `diagnostics.globals` aufnehmen.
 
-`tests/run.lua` clears `_G.Blizz` and `package.loaded[...]` between test files so each runs in a fresh scope. Plain `assert()` is the only test API — no busted/luaunit. Print `"✓ <description>"` lines on pass.
+`tests/run.lua` cleart `_G.Blizz` und `package.loaded[...]` zwischen Test-Files, sodass jeder in einem frischen Scope läuft. Test-API ist plain `assert()` — kein busted/luaunit. Pro Pass eine Zeile `"✓ <Beschreibung>"` printen.
 
-## Stolperfallen (gotchas)
+## Stolperfallen
 
-- **TOC `## Interface: 120005`** must match the live client major. Bump on patch days or the addon shows "Out of Date" and won't load.
-- **LuaJIT 5.1 only.** No `//` integer division, no native `&|~` bitwise ops (use `bit.band/bor/bxor/lshift/rshift`), no Lua 5.2+ `goto`-continue idioms, no `<const>` attributes.
-- **Don't bypass the EventBus** by calling `frame:SetScript("OnEvent", ...)` in module code — you lose pcall containment and the diag tracer. Use the `events = { ... }` + `onEvent` contract.
-- **Don't read combat APIs directly** — go through `core/unitstate.lua` / `core/cooldowns.lua`. Midnight 12.0 Secret Values otherwise contaminate arithmetic with silent errors. See `docs/cookbook/01-midnight-12.0-changes.md`.
-- **`/blizz disable <id>` requires `/reload`** to take effect (disabled-set is read once during bootstrap).
-- The `BlizzActionDiag` frame in `Blizz.lua` captures `ADDON_ACTION_BLOCKED`/`ADDON_ACTION_FORBIDDEN` with debugstack — leave it on while debugging Midnight blocked-action popups.
+- **TOC `## Interface: 120005`** muss zum live-Client-Major passen. Bei Patch-Tagen hochziehen, sonst zeigt das Addon "Out of Date" und lädt nicht.
+- **Nur LuaJIT 5.1.** Kein `//` Integer-Division, kein natives `&|~` (stattdessen `bit.band/bor/bxor/lshift/rshift`), keine 5.2+-`goto`-Continue-Idiome, kein `<const>`-Attribut.
+- **EventBus nicht umgehen** — kein `frame:SetScript("OnEvent", ...)` in Modul-Code, sonst verlierst du pcall-Containment und den Diag-Tracer. Immer der `events = { ... }` + `onEvent`-Kontrakt.
+- **Combat-APIs nicht direkt lesen** — immer durch `core/unitstate.lua` / `core/cooldowns.lua`. Midnight-12.0-Secret-Values kontaminieren sonst still die Arithmetik. Siehe `docs/cookbook/01-midnight-12.0-changes.md`.
+- **`/blizz disable <id>` braucht `/reload`** um zu greifen (die Disabled-Liste wird nur einmal beim Bootstrap gelesen).
+- Der `BlizzActionDiag`-Frame in `Blizz.lua` capturet `ADDON_ACTION_BLOCKED`/`ADDON_ACTION_FORBIDDEN` mit `debugstack` — beim Debuggen von Midnight-Blocked-Action-Popups einfach drin lassen.
