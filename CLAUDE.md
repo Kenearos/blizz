@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Blizz ist ein standalone WoW-UI-Addon (Tank-Fokus, Prot Warri M+) für den **Midnight 12.0**-Client. Runtime ist LuaJIT 2.1 mit Lua-5.1-Semantik — *nicht* Standard-Lua 5.3+. Kein Ace3, kein oUF, keine Runtime-Dependencies.
 
-Ausführliche Doku liegt unter `docs/cookbook/` (Architektur, Midnight-12.0-API-Änderungen, Testing) und in der `README.md`. Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
+Ausführliche Doku liegt unter `docs/cookbook/` (01 Midnight-12.0-API-Änderungen, 02 Architektur, 03 Testing-Toolchain, 04 Tank-Meta 2026, 05 Visual-Design v6→v7) und in der `README.md`. Design-Specs und Phasen-Pläne aus dem GSD-Workflow liegen unter `docs/alt-superpowers/{specs,plans,mockups}/`. Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
 
 ## Häufige Kommandos
 
