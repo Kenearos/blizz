@@ -119,7 +119,7 @@ Vier Epics, gemappt auf PRD-Sektion 14:
   **Then** sehe ich Intent (1 Absatz), Problem (warum nicht direkt `SetScript("OnEvent")`), Code (minimaler Bus + Subscribe + Pcall-Wrap), Stolperfalle (Forgotten-Pcall, Error-Ring-Buffer), Test (Headless-Mock-Beispiel).
 - **Given** ich kopiere das Code-Snippet allein,
   **Then** läuft es ohne weitere Cookbook-Lookups (out-of-context).
-- **Given** `tests/cookbook/test_eventbus.lua` existiert,
+- **Given** `tests/cookbook/test_eventbus.lua` existiert **und** das Runner-Update aus Story A.1 ist drin (rekursives `tests/**/test_*.lua`-Discovery),
   **When** `luajit tests/run.lua`,
   **Then** Test grün.
 
