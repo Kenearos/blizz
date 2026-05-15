@@ -12,3 +12,7 @@ log/
 
 # Claude local settings (per-user)
 .claude/settings.local.json
+
+# BMAD per-user config (the rest of _bmad/ + .claude/skills/bmad-* IS committed)
+_bmad/config.user.toml
+_bmad/custom/config.user.toml
