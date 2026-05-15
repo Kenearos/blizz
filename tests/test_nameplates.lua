@@ -41,11 +41,16 @@ addon.EventBus:dispatch("NAME_PLATE_UNIT_ADDED", "nameplate3")
 assert(Nameplates.tracked["nameplate3"].overlay:getState() == "ready", "healer = ready state")
 print("✓ healer category classified")
 
--- Priority kill → cd state (red border in v6 mapping)
+-- Priority kill → priority state (red-outline, kill-priority semantic)
 MockSetUnit("nameplate4", { guid = "Creature-0-1234-2660-1-444-000012345004" })
 addon.EventBus:dispatch("NAME_PLATE_UNIT_ADDED", "nameplate4")
-assert(Nameplates.tracked["nameplate4"].category == "priority_kill", "priority_kill category")
-print("✓ priority_kill category classified")
+local e4 = Nameplates.tracked["nameplate4"]
+assert(e4.category == "priority_kill", "priority_kill category")
+assert(
+	e4.overlay:getState() == "priority",
+	"priority_kill overlay state is 'priority', got " .. tostring(e4.overlay:getState())
+)
+print("✓ priority_kill category classified + overlay priority state")
 
 -- Unknown mob → generic, no overlay tracked
 MockSetUnit("nameplate5", { guid = "Creature-0-1234-2660-1-999999-000012345005" })

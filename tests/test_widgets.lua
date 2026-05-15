@@ -16,6 +16,9 @@ f:setReady()
 assert(f.__state == "ready", "state should be ready")
 f:setDefault()
 assert(f.__state == "default", "state back to default")
+f:setPriority()
+assert(f.__state == "priority", "state should be priority")
+f:setDefault()
 print("✓ Frame state switching")
 
 -- Text: setzt Mono-Font + value-Color
@@ -100,6 +103,8 @@ f_p:setAlert()
 assert(f_p.__pip_state == "alert", "pip state alert after setAlert")
 f_p:setCD()
 assert(f_p.__pip_state == "idle", "pip state idle after setCD")
+f_p:setPriority()
+assert(f_p.__pip_state == "alert", "pip state alert after setPriority")
 print("✓ v7: Frame status pip state transitions")
 
 local f_b = Frame:new({ name = "T_BOX", parent = UIParent, width = 200, height = 60 })
