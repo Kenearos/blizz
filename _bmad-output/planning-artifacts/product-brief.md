@@ -1,17 +1,18 @@
 # Product Brief: Blizz
 
-> **Status:** Draft v1 · **Datum:** 2026-05-15 · **Autor:** Mary (BMAD Business Analyst) mit Kenearos
+> **Status:** Draft v2 · **Datum:** 2026-05-15 · **Autor:** Mary (BMAD Business Analyst) mit Kenearos
 > **Stage:** Planning · **Nächstes Artefakt:** PRD (Product Requirements Document)
+> **Änderungen ggü. v1:** Risiken-Sektion ergänzt, Erfolgs-Tabelle in "Signale statt Ziele" umgegliedert, Ketho-Submodule + MCP in Phase 1 gezogen (Zeitfenster pro Phase entfernt, Scope ist fix), Marketingsprache entschärft.
 
 ---
 
 ## Executive Summary
 
-**Blizz** ist ein Open-Source-Repository (MIT), das in *einer kohärenten Codebasis* zwei Dinge liefert: (1) eine **kanonische, LLM-konsumierbare Wissens- und Discovery-Schicht für moderne WoW-Addon-Entwicklung** und (2) eine **vollwertige Protection-Warrior-M+-Tank-UI** als lebende Reference-Implementation, die die Wissensschicht validiert.
+**Blizz** ist ein Open-Source-Repository (MIT), das in einem Mono-Repo zwei Dinge liefert: (1) eine **LLM-konsumierbare Wissens- und Discovery-Schicht für WoW-Addon-Entwicklung unter Midnight 12.0** und (2) eine **Protection-Warrior-M+-Tank-UI** als lebende Reference-Implementation, die die Wissensschicht validiert.
 
-Mit dem Midnight-12.0-Patch (live seit 2026-03-02) hat Blizzard die aggressivste Addon-API-Reduktion seit Cataclysm ausgespielt. Combat-Data-APIs sind beschnitten, langjährige Globals entfernt, neue "Secret Values" werfen stille Fehler. Praktisch alle Tutorials und YouTube-Anleitungen sind älter als diese Welt; die einzige aktuelle API-Referenz ist `warcraft.wiki.gg` — kuratiert, aber HTML-Wiki, nicht LLM-ingestion-ready. Gleichzeitig hat sich Vibecoding etabliert: Solo-Devs erwarten, mit Claude/GPT/Cursor in Stunden zu liefern, was früher Wochen brauchte. Was fehlt, ist die Brücke: ein Repo, das `Ketho/vscode-wow-api`s 8.000+ Annotations + die Wiki-Migration-Pages + reale Production-Patterns zu einem **task-orientierten Cookbook mit `llms.txt`-Discovery** konsolidiert.
+Mit dem Midnight-12.0-Patch (live seit 2026-03-02) ist ein großer Teil der Addon-API ersetzt oder eingeschränkt worden. Combat-Data-APIs sind beschnitten, langjährige Globals entfernt, neue "Secret Values" werfen stille Fehler. Bestehende Tutorials und YouTube-Anleitungen sind älter als diese Änderungen; die aktuellste konsolidierte API-Referenz ist `warcraft.wiki.gg` — kuratiert, aber HTML-Wiki, nicht LLM-ingestion-ready. Parallel etabliert sich Vibecoding: Solo-Devs erwarten, mit Claude/GPT/Cursor in Stunden zu liefern, was früher Wochen brauchte. Es fehlt die Brücke: ein Repo, das `Ketho/vscode-wow-api`s Annotations (per git-submodule), Wiki-Migration-Pages und reale Production-Patterns zu einem **task-orientierten Cookbook mit `llms.txt`-Discovery und MCP-Tool-Exposure** konsolidiert.
 
-Blizz besetzt diese Nische, ohne mit den bestehenden Wissensquellen zu konkurrieren — es konsolidiert sie und macht sie LLM-tauglich. Validiert wird das ganze durch die Tank-UI: wenn ein Solo-Dev mit Blizz' Cookbook + LLM eine M+-würdige Tank-UI bauen kann, ist die Datenbank gut genug.
+Blizz konkurriert nicht mit den bestehenden Wissensquellen, sondern konsolidiert sie über einen Build-Step und macht sie LLM-tauglich. Validiert wird das Ganze durch die Tank-UI: wenn ein Solo-Dev mit Blizz' Cookbook + LLM eine M+-würdige Tank-UI bauen kann, ist die Datenbank gut genug.
 
 ## Das Problem
 
@@ -52,11 +53,11 @@ Blizz ist ein einziges Repository mit drei sich gegenseitig verstärkenden Schic
 | `JuanjoSalvador/awesome-wow` (38★) | Klassische Awesome-Liste | Letzter Push 2019. Tot. |
 | Cell/BigWigs/Plater | Production-Addons mit Migration-Patterns | 50k+ Zeilen, kein "for-other-devs" Layer |
 
-**Unfair advantage:**
-1. **Drei Schichten auf einmal** — niemand sonst hat Cookbook + LLM-Discovery + Reference-Impl in einem Repo. Jeder Konkurrent bedient nur eine Achse.
-2. **Reference-Impl ist bereits da** — Blizz' Tank-UI ist nicht zukünftig zu bauen; sie läuft, ist getestet, ist die lebende Validierung.
-3. **Upstream-freundlich** — Ketho's Annotations + Wiki-Knowledge werden integriert, nicht dupliziert. Reduziert Wartung und macht uns nicht zum N+1-Wettbewerber.
-4. **Sprache:** Repo + Doku auf Deutsch + Englisch (das Cookbook auf Englisch für Reach, einzelne Devs-Notes ggf. zweisprachig). BMAD-Kommunikation auf Deutsch.
+**Konkrete Vorteile:**
+1. **Drei Schichten in einem Repo** — Cookbook + LLM-Discovery + Reference-Impl. Jeder andere Konkurrent bedient nur eine davon.
+2. **Reference-Impl existiert bereits** — Tank-UI läuft, ist getestet, ist die lebende Validierung. Wir vermessen kein Greenfield-Risiko.
+3. **Upstream-freundlich statt N+1-Wettbewerber** — Ketho's Annotations werden per git-submodule integriert. Annotation-Lücken, die wir beim Cookbook-Schreiben finden, gehen als PR zurück nach upstream (mit Commit-Footer "Discovered while building github.com/kenearos/blizz"). Reduziert Wartung *und* erzeugt passive Backlinks von einem Repo, das genau unsere Zielgruppe liest.
+4. **Sprache:** Repo + Cookbook auf Englisch für Reach, BMAD-Planungsartefakte und einzelne Dev-Notes auf Deutsch.
 
 ## Wer das bedient
 
@@ -72,56 +73,71 @@ LLM-Trainings-Datasets, RAG-Systeme, MCP-Tool-Use-Konsumenten. *Erfolg für sie:
 **Tertiary: Kenearos selbst**
 Tank-UI muss in M+-Sessions funktionieren. Reference-Impl bleibt nutzbar; sie ist kein Demo-Artefakt das jemals "fertig" gehyped wird, sondern Daily-Driver.
 
-## Erfolgskriterien
+## Erfolgssignale
 
-| Metrik | M1-Ziel (8 Wochen) | M3-Ziel (6 Monate) |
+Stars und Installationszahlen werden tracked, aber nicht als Ziele gesetzt — sie sind Vanity-Output, nicht Steuerungsgröße. Was wirklich zählt sind **Konsum-Signale**: greift das Repo als LLM-Wissensquelle?
+
+| Signal | Phase-1 (Definition-of-Done v1.0) | Längerfristig (offen) |
 |---|---|---|
-| GitHub-Stars | 25+ | 200+ |
-| `llms.txt` von externer LLM-Toolchain referenziert | — | nachweisbar in Cursor/Continue-Setups |
-| Anzahl Cookbook-Recipes | 8–12 (Pattern-Recipes aus Existing-Code) | 25+ inkl. Migration + End-to-End |
-| MCP-Server-Installationen | — | 10+ (Manifest in MCP-Registry) |
-| Fork-Adoption-Beleg | 1–2 abgeleitete Addons öffentlich | 5+ |
-| Tank-UI-Stabilität | 0 unbehandelte Production-Errors / Woche | unverändert |
-| Test-Coverage Recipes | jedes Recipe hat einen runnable Test-Case | unverändert |
+| **Cookbook-Vollständigkeit** | Recipes für alle in Blizz implementierten Patterns (EventBus, Secrets, Cooldowns, UnitState, Module-Reg, Position-Persistence, Widget-State, Headless-Test) + Migration-Recipes für Midnight-12.0-Breaking-Changes | inkrementell erweitert |
+| **Test-Coverage Recipes** | jedes Recipe hat einen runnable Test-Case | unverändert |
+| **Tank-UI-Stabilität** | 0 unbehandelte Production-Errors / Woche im Eigeneinsatz | unverändert |
+| **Ketho-Upstream-Beweis** | ≥ 3 von uns initiierte PRs in `Ketho/vscode-wow-api` gemerged | wachsend |
+| **llms.txt-Adoption-Beleg** | öffentliche `adopters.md`, automatisch befüllt via GitHub-Code-Search nach `blizz/llms.txt`-Referenzen | nachweisbare Adoption durch ≥ 5 fremde Repos |
+| **MCP-Registry-Listing** | Server live, Continue/Cursor-Config-Snippet im README, GIF-Demo | optionale Anbindung an Claude-Skills-Marketplace |
+| **Zweite Reference-Impl** | `examples/from-scratch/` mit dokumentiertem Claude-Session-Transcript, in dem ein Dritter mit nur dem Cookbook ein Mini-Addon baut | weitere Beispiele |
 
-**Was wir nicht messen:** Tutorial-Aufrufe, Discord-Server-Größe, "engagement". Der Erfolg ist binär — wird das Repo von LLMs/Tools konsumiert oder nicht?
+**Was wir nicht messen:** Tutorial-Aufrufe, Discord-Größe, "engagement", absolute Star-Zahlen. Konsum-Signale schlagen Popularitäts-Signale.
 
-## Scope (klare Phasen)
+## Scope
 
-### M1 — v0.4 "Existing-Patterns First" (8 Wochen, MVP)
-**Drin:**
-- Recipes für die in Blizz schon implementierten Patterns: EventBus, Secrets-Defense, Cooldowns-Wrapper, UnitState-Wrapper, Module-Registration, Position-Persistence, Widget-State-System, headless-Testing-Setup
-- `llms.txt` (Wegweiser) + `llms-full.txt` (Cookbook-Dump)
+Da Kenearos solo arbeitet, gibt es **keine harten Phasen-Deadlines** — der Scope ist fix, die Zeit ist offen. Der Brief unterscheidet zwischen dem **Definition-of-Done für v1.0** (Phase 1, alles muss drin sein bevor wir "v1.0" sagen) und **passiver Distribution**, die parallel zur Entwicklung läuft und keinen eigenen "Launch-Moment" braucht.
+
+### Phase 1 — Definition-of-Done für v1.0 (Scope-fix, Zeit-offen)
+
+**Wissensbank:**
+- Recipes für alle in Blizz bereits implementierten Patterns: EventBus, Secrets-Defense, Cooldowns-Wrapper, UnitState-Wrapper, Module-Registration, Position-Persistence, Widget-State-System, headless-Testing-Setup
+- Migration-Recipes pro Midnight-12.0-Breaking-Change (Secret-Values, CLEU-Removal, C_Spell-Namespace, Deprecations) mit Vorher/Nachher-Diffs
+- Jedes Recipe hat einen runnable Test-Case
+
+**Discovery-Schicht:**
+- `llms.txt` (Wegweiser) + `llms-full.txt` (Cookbook-Dump als Single-File-Ingestion)
 - `AGENTS.md` als Mirror/Generator von `CLAUDE.md`
 - BMAD-PRD + Architecture-Doc gemerged
-- Tank-UI-Bug-Polish (was anliegt — siehe Backlog)
 
-**Draußen:**
-- MCP-Server (M3)
-- Migration-Cookbook (M2)
-- Wiki-Pages parsen
-- Andere Tank-Specs
-- Konfigurations-UI
+**Ketho-Integration (Pipeline):**
+- `Ketho/vscode-wow-api` als git-submodule unter `vendor/ketho/`
+- Build-Skript in `mcp-server/scripts/build-cookbook.ts` (Sprache durch Architecture festgelegt: TypeScript/Node im selben Workspace wie der MCP-Server) das aus Ketho-Annotations + Wiki-Migration-Pages + Blizz-Markdowns die Datenquellen für `llms-full.txt` und MCP-Server rendert
+- CI-Job, der das Build wöchentlich gegen aktuellen Ketho-Stand fährt (drift-detection)
 
-### M2 — v0.5 "Migration-Cookbook" (weitere 6 Wochen)
-**Drin:**
-- Recipes pro Midnight-12.0-Breaking-Change (Secret-Values, CLEU-Removal, C_Spell-Namespace, Deprecations, etc.)
-- Wiki-Migration-Pages als strukturierte Daten parsen
-- Diff-Beispiele "vorher / nachher" pro Migration
-- Erweitertes `llms-full.txt`
+**MCP-Server (vorgezogen, war v1-M3):**
+- Node oder Python, ingestiert Ketho-Annotations + Cookbook
+- Tool-Endpoints: `wow-api-search`, `recipe-search`, `migration-lookup`
+- Continue.dev und Cursor Config-Snippets im README, 1-Click-Install-Spec, GIF-Demo
+- MCP-Registry-Manifest
 
-**Draußen:** weiterhin MCP, End-to-End-Demo.
+**Reference-Implementations:**
+- Tank-UI (existierend) bleibt Daily-Driver, 0 unbehandelte Production-Errors / Woche
+- **Zweite Mini-Reference-Impl** in `examples/from-scratch/`: ein 50-Zeilen-Mini-Addon (z.B. Healer-Cooldown-Tracker), entstanden in einer dokumentierten Claude-Session, Transcript + resultierendes Repo eingecheckt. Das ist der eigentliche Beweis des Cookbook-Validation-Loops.
 
-### M3 — v0.6 / v1.0 "MCP + End-to-End" (weitere 8 Wochen)
-**Drin:**
-- MCP-Server der Ketho's Annotations + Blizz' Cookbook live exposed
-- End-to-End-Demo: "Cooldown-Tracker in 30 min" als Video + Repo-Walk-Through
-- MCP-Registry-Listing
-- v1.0-Launch-Kommunikation
+### Passive Distribution (parallel zur Phase 1, keine separate Phase)
 
-**Draußen:** alles was nicht direkt LLM-Discovery, Migration oder Tank-UI ist.
+Hebel, die mit Stunden statt Wochen greifen — laufen mit jedem neuen Recipe automatisch:
 
-### Niemals drin (explizit out-of-scope, für immer)
+- **Ketho-Upstream-PRs**: jede Annotation-Lücke, die beim Recipe-Schreiben auffällt, wird als PR an `Ketho/vscode-wow-api` eingereicht. Commit-Footer referenziert Blizz.
+- **Awesome-Lists-Einträge**: PRs in `awesome-llms-txt`, `awesome-mcp-servers`, `awesome-claude-skills`, ggf. Fork/Revival von `awesome-wow`.
+- **Wago / CurseForge**: Tank-UI dort listen mit Cookbook-Link in der Beschreibung (nicht für Downloads, für Discovery-Funnel).
+- **Claude-Skills-Marketplace**: nach MCP-Live-Schaltung als `blizz-wow-addon`-Skill publizieren.
+- **`adopters.md`** auto-generiert per GitHub-Code-Search nach `blizz/llms.txt`-Referenzen.
+
+### Post-v1.0 (offen, nicht committed)
+
+- WoW-agnostische `docs/cookbook/patterns/`-Schicht für Cross-Game-Reach (ESO, FFXIV-Dalamud, generisches Game-UI-in-Lua) — nur wenn nach v1.0 Energie übrig ist
+- Erweiterte Migration-Recipes für Folge-Patches (12.1+)
+- Weitere from-scratch-Beispiele
+
+### Bewusst out-of-scope (Stand jetzt — revidierbar nach v1.0)
+
 - Andere WoW-Specs oder -Klassen außerhalb der Tank-Reference-Impl
 - Raid-Boss-Timer (BigWigs-Territorium)
 - Konfigurations-UI à la Ace3 (Position-Persistenz + SavedVars reichen)
@@ -130,24 +146,47 @@ Tank-UI muss in M+-Sessions funktionieren. Reference-Impl bleibt nutzbar; sie is
 
 ## Vision (2–3 Jahre)
 
-Wenn Blizz greift, ist es 2028 das **erste Ergebnis**, wenn jemand "WoW addon LLM" googelt oder Cursor/Claude fragt "wie schreibe ich ein WoW-Addon?". Die `llms.txt`-Convention wird Standard, neue Addon-Devs zitieren das Cookbook wie heute MDN Web Docs für JS. Jedes neue WoW-Addon-Boilerplate übernimmt automatisch Blizz' EventBus + Secrets-Pattern, weil es "der Pattern" geworden ist. Die Tank-UI bleibt klein, fokussiert, deine.
+Persönliche Mission zuerst: die Tank-UI bleibt klein, fokussiert, Kenearos' Daily-Driver in M+. Sie wird nicht "fertig", sie wird genutzt.
 
-Realistisch greifbarer Erfolgsfall: Blizz wird in der WoW-AddOn-Dev-Community zu dem Repo, das jeder vibe-codende Solo-Dev einmal in seinem Setup referenziert hat, und das jedes neue LLM-IDE-Tool out-of-the-box als `wow-addon`-Skill anbietet.
+Aspirativer Außeneffekt — kein Versprechen, eine Hypothese: wenn Blizz greift, wird es in der WoW-Solo-Dev-Community zu dem Repo, das man einmal in seinem LLM-Setup referenziert hat. Cursor/Claude antworten auf "schreib mir ein WoW-Addon" mit Code, der Blizz' Patterns benutzt — nicht weil das Pattern "berühmt" wäre, sondern weil es im Trainings-Korpus und in MCP-Servern als kanonischer 12.0-Code auftaucht. Die `llms.txt`-Convention bleibt für die Lebensdauer dieser Hypothese ein nützliches Standard-Pattern.
+
+Falls die Hypothese kippt (siehe Risiken), bleibt der Eigennutzen: ein gepflegtes, dokumentiertes, dauerhaft funktionierendes Tank-UI plus eine private LLM-Wissensbank, die Kenearos' eigenen Workflow beschleunigt.
+
+## Risiken & Annahmen
+
+| Risiko | Wahrscheinlichkeit | Impact | Mitigation |
+|---|---|---|---|
+| **Solo-Dev-Burnout / Scope drückt Tank-UI als Daily-Driver weg** | hoch | hoch | Keine harten Deadlines, "Definition-of-Done" statt Sprint. Tank-UI bleibt explizit Phase-1-Pflicht: kaputter Daily-Driver = Notbremse. |
+| **Ketho-Submodule-Drift / Breakage** | mittel | mittel | Build-Step pinnt Submodule-Commit. CI-Job mit drift-detection. Bei Breakage: Cookbook bleibt benutzbar mit altem Stand bis Pin-Update. |
+| **Midnight 12.x Folge-Patches brechen Recipes** | hoch | mittel | Migration-Recipes sind selbst ein Asset (jeder Breaking-Change wird zu neuem Recipe). Headless-Tests fangen API-Signaturen-Drift früh. |
+| **`llms.txt`-Standard setzt sich nicht durch** | mittel | mittel | `llms-full.txt` und MCP-Server sind eigenständige Distributionswege. AGENTS.md als Mirror reduziert Abhängigkeit von einer Convention. |
+| **Ketho lehnt Upstream-PRs ab / Konflikt** | niedrig | niedrig | Lizenzkompatibel forken oder lokal patchen. Backlink-Effekt entfällt, Wartungsaufwand steigt minimal. |
+| **Konkurrenz reagiert (Ketho rendert eigenes Cookbook, Wiki kommt mit `llms.txt`)** | niedrig–mittel | mittel | Reference-Impl + zweite Mini-Impl bleiben einzigartiger Beweis-Mechanismus. Wenn upstream übernimmt, ist die Mission erfüllt. |
+| **LLM-Tooling-Landschaft verschiebt sich (MCP wird ersetzt, Cursor pivotiert)** | mittel | mittel | Cookbook + llms.txt + AGENTS.md bleiben Format-agnostisch. MCP ist Distributionskanal, nicht Hauptasset. |
+| **Lizenz-/Attribution-Stolpersteine bei Wiki-Migration-Pages** | mittel | niedrig | Vor erstem Wiki-Parse: Attribution-Policy lesen (CC-BY-SA-typisch). Vorher-Nachher-Diffs eher als Eigentext schreiben. |
+
+**Annahmen die kippen können:**
+- Vibecoder-Workflow bleibt für die nächsten 2 Jahre relevant (vs. AI-Agents übernehmen komplett, dann braucht's andere Schnittstellen)
+- Midnight 12.0 bleibt grob stabil (keine zweite Cataclysm-Schwere-Reduktion in 12 Monaten)
+- Kenearos' M+-Engagement bleibt hoch genug, dass die Tank-UI Daily-Driver-Status hält
 
 ## Technischer Ansatz (High-Level)
 
-- **Runtime:** LuaJIT 2.1 / Lua 5.1 (WoW Midnight 12.0), keine Runtime-Dependencies.
+- **Runtime:** LuaJIT 2.1 / Lua 5.1 (WoW Midnight 12.0), keine Runtime-Dependencies im Addon selbst.
 - **Existing Codebase:** 10 Module, EventBus, Secrets-Defense, headless Test-Harness — bleibt wie ist, wird *dokumentiert*, nicht refactored.
-- **Cookbook-Format:** Markdown pro Recipe, plus generierter `llms-full.txt` Build-Step.
-- **MCP-Server (M3):** Node oder Python, ingestiert Ketho's Annotations (Submodule oder Build-Pull) und Blizz' Cookbook, exposed als MCP-Tools.
-- **Build:** weiterhin kein WoW-side Build. Doku-Build = einfaches Cat/Concat-Script in `scripts/`.
+- **Cookbook-Format:** Markdown pro Recipe in `docs/cookbook/`. Build-Step rendert daraus + Ketho-Annotations + Wiki-Migration-Pages → `llms-full.txt` (Single-File-Ingestion) und MCP-Server-Datenquelle.
+- **Ketho-Anbindung:** `Ketho/vscode-wow-api` als git-submodule unter `vendor/ketho/`. Pin-Commit im Repo, CI-Job für drift-detection. Lücken werden upstream als PR eingereicht, nicht lokal gepatcht (wenn möglich).
+- **MCP-Server (Phase 1):** Node oder Python — Entscheidung in der Architecture-Stage. Ingestiert Cookbook + Ketho. Exposed `wow-api-search`, `recipe-search`, `migration-lookup` als Tools. Continue.dev + Cursor Config-Snippets als README-Beilagen.
+- **Build:** kein WoW-side Build. Doku-/MCP-Build = `scripts/build-cookbook.*` (Sprache offen, Architecture-Entscheidung).
 - **Planning-Tooling:** BMAD-Method (installiert) für PRD/Architecture/Stories.
 
 ---
 
 ## Offene Punkte für die nächsten BMAD-Stages
 
-- PRD mit Epic A (Wissensbank) + Epic B (Tank-UI) sharden
-- Architecture-Doc: wie binden wir Ketho an? Submodule vs Build-Time-Pull vs MCP-only
-- Story-Aufschlüsselung für M1 (Recipes aus Existing-Patterns)
-- Entscheidung Cookbook-Sprache: Deutsch, Englisch, oder beides parallel?
+- PRD mit Epic A (Wissensbank + Discovery), Epic B (Ketho-Pipeline + MCP), Epic C (Tank-UI + zweite Reference-Impl) sharden
+- Architecture-Entscheidungen: MCP-Server-Sprache (Node vs Python), Build-Skript-Sprache, CI-Provider, Test-Pyramide für die neue Pipeline
+- Story-Aufschlüsselung für Phase 1 (Recipes aus Existing-Patterns + Migration-Recipes + Ketho-Integration + MCP-Endpoints)
+- Cookbook-Sprache: bestätigt Englisch (Reach), BMAD-Artefakte Deutsch
+- Konkrete Wahl des zweiten from-scratch-Beispiels (Healer-Cooldown? DPS-Tracker? Solo-Boss-Mod?)
+- Liste der Awesome-Repos für initialen Distribution-Push
