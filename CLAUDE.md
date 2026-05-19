@@ -6,7 +6,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Blizz ist ein standalone WoW-UI-Addon (Tank-Fokus, Prot Warri M+) für den **Midnight 12.0**-Client. Runtime ist LuaJIT 2.1 mit Lua-5.1-Semantik — *nicht* Standard-Lua 5.3+. Kein Ace3, kein oUF, keine Runtime-Dependencies.
 
-Ausführliche Doku liegt unter `docs/cookbook/` (01 Midnight-12.0-API-Änderungen, 02 Architektur, 03 Testing-Toolchain, 04 Tank-Meta 2026, 05 Visual-Design v6→v7) und in der `README.md`. Design-Specs und Phasen-Pläne aus dem GSD-Workflow liegen unter `docs/alt-superpowers/{specs,plans,mockups}/`. Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
+Ausführliche Doku:
+- `docs/cookbook/` — Engineering-Recipes: Midnight-12.0-API-Änderungen, Architektur, Testing, Tank-Meta 2026, Visual-Design v6→v7.
+- `_bmad-output/planning-artifacts/` — Produkt-Artefakte aus BMAD-Workflow: `product-brief.md`, `prd.md`, `solution-architecture.md`, `epics.md`. Hier nachschauen für *warum*-Fragen (Scope, Akzeptanzkriterien, Story-Reihenfolge) bevor du Module umbaust.
+- `docs/alt-superpowers/{specs,plans,mockups}/` — Design-Specs und Phasen-Pläne aus dem GSD-Workflow.
+- `README.md` — Externe Sicht für Contributors.
+
+Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
 
 ## Häufige Kommandos
 
@@ -86,3 +92,4 @@ Wenn ein Modul eine WoW-API anfasst, die noch nicht gemockt ist:
 - **Combat-APIs nicht direkt lesen** — immer durch `core/unitstate.lua` / `core/cooldowns.lua`. Midnight-12.0-Secret-Values kontaminieren sonst still die Arithmetik. Siehe `docs/cookbook/01-midnight-12.0-changes.md`.
 - **`/blizz disable <id>` braucht `/reload`** um zu greifen (die Disabled-Liste wird nur einmal beim Bootstrap gelesen).
 - Der `BlizzActionDiag`-Frame in `Blizz.lua` capturet `ADDON_ACTION_BLOCKED`/`ADDON_ACTION_FORBIDDEN` mit `debugstack` — beim Debuggen von Midnight-Blocked-Action-Popups einfach drin lassen.
+- **BMAD-Artefakte sind nicht der Code.** `_bmad/` ist die Toolchain-Installation, `_bmad-output/planning-artifacts/` sind die generierten Specs. Beide werden committet, aber Änderungen am Code dürfen die Specs nicht stillschweigend brechen — wenn du eine Story aus `epics.md` umsetzt oder Akzeptanzkriterien änderst, das entsprechende Artefakt mit anpassen.
