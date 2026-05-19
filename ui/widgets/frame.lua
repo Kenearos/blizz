@@ -6,7 +6,7 @@ end
 
 -- ui/widgets/frame.lua
 -- Themed Frame mit v6-Theming + Tech-Corner-Brackets.
--- States: default | ready | cd | alert.
+-- States: default | ready | cd | alert | priority.
 -- Defensiv gegen API-Drift (BackdropTemplate, SetBackdrop) in Midnight 12.0.
 
 local Theme = addon.Theme or require("ui.theme")
@@ -34,6 +34,10 @@ local function apply_cd(f)
 end
 local function apply_alert(f)
 	safe_call(f.SetBackdropColor, f, Theme.getColor("alert_deep"))
+	safe_call(f.SetBackdropBorderColor, f, Theme.getColor("alert"))
+end
+local function apply_priority(f)
+	safe_call(f.SetBackdropColor, f, Theme.getColor("bg_primary"))
 	safe_call(f.SetBackdropBorderColor, f, Theme.getColor("alert"))
 end
 
@@ -242,6 +246,11 @@ function Frame:new(spec)
 	function f:setAlert()
 		self.__state = "alert"
 		apply_alert(self)
+		apply_pip(self, "alert")
+	end
+	function f:setPriority()
+		self.__state = "priority"
+		apply_priority(self)
 		apply_pip(self, "alert")
 	end
 

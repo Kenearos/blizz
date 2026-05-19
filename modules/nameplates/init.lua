@@ -12,7 +12,7 @@ end
 --   "caster"        → setAlert()    (Magenta-gefüllt, "kick priority")
 --   "frontal"       → setDefault()  (Outline, situational)
 --   "healer"        → setReady()    (Lime/Cyan-gefüllt, top-kill)
---   "priority_kill" → setCD()       (Grey-Border, später eigenes 'priority' state)
+--   "priority_kill" → setPriority() (Red-Outline, kill-priority — spec §Phase 5)
 
 local Frame = addon.Frame or require("ui.widgets.frame")
 local Text = addon.Text or require("ui.widgets.text")
@@ -38,7 +38,7 @@ local function apply_category_state(overlay, category)
 	elseif category == "healer" then
 		overlay:setReady()
 	elseif category == "priority_kill" then
-		overlay:setCD()
+		overlay:setPriority()
 	else
 		overlay:setDefault()
 	end

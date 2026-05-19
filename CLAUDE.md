@@ -9,6 +9,7 @@ Blizz ist ein standalone WoW-UI-Addon (Tank-Fokus, Prot Warri M+) für den **Mid
 Ausführliche Doku:
 - `docs/cookbook/` — Engineering-Recipes: Midnight-12.0-API-Änderungen, Architektur, Testing, Tank-Meta 2026, Visual-Design v6→v7.
 - `_bmad-output/planning-artifacts/` — Produkt-Artefakte aus BMAD-Workflow: `product-brief.md`, `prd.md`, `solution-architecture.md`, `epics.md`. Hier nachschauen für *warum*-Fragen (Scope, Akzeptanzkriterien, Story-Reihenfolge) bevor du Module umbaust.
+- `docs/alt-superpowers/{specs,plans,mockups}/` — Design-Specs und Phasen-Pläne aus dem GSD-Workflow.
 - `README.md` — Externe Sicht für Contributors.
 
 Vor nicht-trivialen strukturellen Änderungen `docs/cookbook/02-architecture.md` lesen.
